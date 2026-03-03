@@ -1,0 +1,18 @@
+# Configuration file for codecov reporting code coverage
+
+# Percentage drop allowed
+coverage:
+  status:
+    project:
+      default:
+        threshold: 0.5%
+
+# Disable codecov comments in every PR
+comment: off
+
+# From https://docs.codecov.com/docs/notifications#preventing-notifications-until-after-n-builds
+# Prevent notifications before completing half of the workflows, 
+# CPU (4 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple)
+codecov:
+  notify:
+    after_n_builds: 4
