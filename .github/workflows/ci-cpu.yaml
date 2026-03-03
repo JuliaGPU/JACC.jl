@@ -22,21 +22,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Instantiate
-        run: |
-          which julia || curl -fsSL https://install.julialang.org | sh -s -- -y
-          . /home/runner/.bash_profile
-          julia --project -e 'using Pkg; Pkg.instantiate();'
+        uses: julia-actions/setup-julia@v2
+        with:
+          show-versioninfo: 'true'
+        
+      - uses: julia-actions/cache@v2
+
+      - uses: julia-actions/julia-buildpkg@v1
 
       - name: Test Serial
         if: contains(matrix.jobname, '-serial')
-        run: |
-          . /home/runner/.bash_profile
-          julia --project -e 'using Pkg; Pkg.test(;coverage=true)'
+        uses: julia-actions/julia-runtest@v1
 
       - name: Test Threads
         if: contains(matrix.jobname, '-threads')
         run: |
-          . /home/runner/.bash_profile
           julia -t 4 --project -e 'using Pkg; Pkg.test(;coverage=true)'
       
       - name: Process Coverage
