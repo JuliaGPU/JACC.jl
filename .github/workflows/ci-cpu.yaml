@@ -31,13 +31,24 @@ jobs:
         if: contains(matrix.jobname, '-serial')
         run: |
           . /home/runner/.bash_profile
-          julia --project -e 'using Pkg; Pkg.test()'
+          julia --project -e 'using Pkg; Pkg.test(;coverage=true)'
 
       - name: Test Threads
         if: contains(matrix.jobname, '-threads')
         run: |
           . /home/runner/.bash_profile
-          julia -t 4 --project -e 'using Pkg; Pkg.test()'
+          julia -t 4 --project -e 'using Pkg; Pkg.test(;coverage=true)'
+      
+      - name: Process Coverage
+        uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
 
   macos:
     runs-on: macos-latest
@@ -57,8 +68,21 @@ jobs:
 
       - name: Test Serial
         if: contains(matrix.jobname, '-serial')
-        run: julia --project -e 'using Pkg; Pkg.test()'
+        run: julia --project -e 'using Pkg; Pkg.test(;coverage=true)'
 
       - name: Test Threads
         if: contains(matrix.jobname, '-threads')
-        run: julia -t 3 --project -e 'using Pkg; Pkg.test()'
+        run: julia -t 3 --project -e 'using Pkg; Pkg.test(;coverage=true)'
+
+      - name: Process Coverage
+        uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+
+      

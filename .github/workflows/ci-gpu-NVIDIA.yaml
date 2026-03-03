@@ -79,7 +79,20 @@ jobs:
 
       - name: Test
         if: steps.check.outputs.triggered == 'true'
-        run: julia --project -e 'using Pkg; Pkg.test()'
+        uses: julia-actions/julia-runtest@v1
+
+      - name: Process Coverage
+        if: steps.check.outputs.triggered == 'true'
+        uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src,ext/CUDAExt
+
+      - name: Upload Coverage
+        if: steps.check.outputs.triggered == 'true'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
@@ -165,7 +178,20 @@ jobs:
 
       - name: Test
         if: steps.check.outputs.triggered == 'true'
-        run: julia --project -e 'using Pkg; Pkg.test()'
+        uses: julia-actions/julia-runtest@v1
+
+      - name: Process Coverage
+        if: steps.check.outputs.triggered == 'true'
+        uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src,ext/CUDAExt
+
+      - name: Upload Coverage
+        if: steps.check.outputs.triggered == 'true'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
