@@ -71,20 +71,26 @@ jobs:
           repository: ${{fromJson(steps.request.outputs.data).head.repo.full_name}}
           ref: ${{steps.pr_data.outputs.branch}}
 
-      - name: Instantiate
+      - name: Setup Julia
         if: steps.check.outputs.triggered == 'true'
         run: |
           source /etc/profile.d/lmod.sh
           module load julia/1.11.3
+
+      - name: Cache Julia
+        if: steps.check.outputs.triggered == 'true'
+        uses: julia-actions/cache@v2
+
+      - name: Instantiate
+        if: steps.check.outputs.triggered == 'true'
+        run: |
+          echo $JULIA_DEPOT_PATH
           julia --project -e 'using Pkg; Pkg.instantiate()'
           julia --project -e 'using JACC; JACC.set_backend("AMDGPU")'
 
       - name: Test
         if: steps.check.outputs.triggered == 'true'
-        run: |
-          source /etc/profile.d/lmod.sh
-          module load julia/1.11.3
-          julia --project -e 'using Pkg; Pkg.test(;coverage=true)'
+        uses: julia-actions/julia-runtest@v1
 
       - name: Process Coverage
         if: steps.check.outputs.triggered == 'true'
