@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jobname: [ROCM6-JULIA1_11_3-AMDGPU1_1_6]
+        jobname: [ROCM7-JULIA1_11_7-AMDGPU2]
 
     steps:
       # Only trigger CI for certain "actors" (those commenting the PR, not the PR originator)
@@ -74,12 +74,13 @@ jobs:
       - name: Setup Julia
         if: steps.check.outputs.triggered == 'true'
         run: |
-          source /etc/profile.d/lmod.sh
-          module load julia/1.11.3
+          echo "$HOME/opt/julia-1.11.7/bin" >> $GITHUB_PATH
 
       - name: Cache Julia
         if: steps.check.outputs.triggered == 'true'
         uses: julia-actions/cache@v2
+        with:
+          - depot: $HOME/.julia-cousteau
 
       - name: Instantiate
         if: steps.check.outputs.triggered == 'true'
