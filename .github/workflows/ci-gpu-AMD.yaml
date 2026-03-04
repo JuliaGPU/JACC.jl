@@ -105,6 +105,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
+          fail_ci_if_error: true
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
