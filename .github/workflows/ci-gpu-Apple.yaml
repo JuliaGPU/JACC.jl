@@ -92,7 +92,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: lcov.info
+          files: ${{ GITHUB_WORKSPACE }}/lcov.info
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
