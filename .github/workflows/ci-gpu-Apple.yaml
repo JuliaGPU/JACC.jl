@@ -91,7 +91,7 @@ jobs:
         if: steps.check.outputs.triggered == 'true'
         uses: codecov/codecov-action@v5
         with:
-          binary: $HOME/Library/Python/3.13/bin/codecov-cli
+          binary: /Users/wfg/Library/Python/3.13/bin/codecov-cli
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ github.workspace }}/lcov.info
 
