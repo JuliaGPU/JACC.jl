@@ -93,7 +93,8 @@ jobs:
         with:
           binary: /Users/wfg/Library/Python/3.13/bin/codecov-cli
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ${{ github.workspace }}/lcov.info
+          files: lcov.info
+          fail_ci_if_error: true
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
