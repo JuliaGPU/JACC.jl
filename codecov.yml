@@ -16,4 +16,4 @@ comment: off
 # CPU (6 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple)
 codecov:
   notify:
-    after_n_builds: 8
+    after_n_builds: 4
