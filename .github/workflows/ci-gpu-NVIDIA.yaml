@@ -93,6 +93,9 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
+          fail_ci_if_error: true
+          base_sha: ${{fromJson(steps.request.outputs.data).head.sha}}
+          override_pr: ${{ github.event.pull_request.number }}
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
@@ -193,6 +196,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
           fail_ci_if_error: true
+          base_sha: ${{fromJson(steps.request.outputs.data).head.sha}}
+          override_pr: ${{ github.event.pull_request.number }}
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
