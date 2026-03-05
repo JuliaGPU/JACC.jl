@@ -40,11 +40,13 @@ jobs:
           julia -t 4 --project -e 'using Pkg; Pkg.test(;coverage=true)'
 
       - name: Process Coverage
+        if: github.event_name == 'pull_request'
         uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src
 
       - name: Upload Coverage
+        if: github.event_name == 'pull_request'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -76,11 +78,13 @@ jobs:
         run: julia -t 3 --project -e 'using Pkg; Pkg.test(;coverage=true)'
 
       - name: Process Coverage
+        if: github.event_name == 'pull_request'
         uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src
 
       - name: Upload Coverage
+        if: github.event_name == 'pull_request'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
