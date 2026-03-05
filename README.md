@@ -9,10 +9,16 @@
 [![ci-gpu-Apple](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml)
 
 
+
+<img src="./docs/src/assets/jacc-metal.gif" alt="*JACC.jl on Apple M3 GPU*" width="60%" height="400"/>
+
+*JACC.jl on Apple M3 GPU*
+
+
 CPU/GPU portable `array`/`parallel_for`/`parallel_reduce` in Julia for productive science.
 
 JACC.jl leverages the LLVM-based Julia language and ecosystem, in particular [JuliaGPU](https://juliagpu.org/), and [optional package
-extensions](https://julialang.org/blog/2023/04/julia-1.9-highlights/#package_extensions). Similar to portable layers like Kokkos or SYCL in C++, Julia users will have easy access to vendor-neutral CPU/GPU computing writing a single high-level source code, but in a language like Julia designed for science. 
+extensions](https://julialang.org/blog/2023/04/julia-1.9-highlights/#package_extensions). Similar to portable layers like Kokkos, RAJA, or SYCL in C++, Julia users will have easy access to vendor-neutral CPU/GPU computing writing a single high-level source code, but in a language like Julia designed for science. 
 
 JACC.jl programming model provides:
   
