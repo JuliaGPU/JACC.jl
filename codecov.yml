@@ -11,9 +11,9 @@ coverage:
 comment: off
 
 # From https://docs.codecov.com/docs/notifications#preventing-notifications-until-after-n-builds
-# Prevent notifications before completing the more stable workflows (4 CPU and 2 GPU NVIDIA)
+# Prevent notifications before completing the more stable workflows (6 CPU and 2 GPU NVIDIA)
 # Prevent notifications after merging PRs that run CPU jobs only.
-# CPU (4 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple)
+# CPU (6 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple)
 codecov:
   notify:
-    after_n_builds: 6
+    after_n_builds: 8
