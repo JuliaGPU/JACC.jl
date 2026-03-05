@@ -10,7 +10,7 @@
 
 
 
-<img src="./docs/src/assets/jacc-metal.gif" alt="*JACC.jl on Apple M3 GPU*" width="60%" height="400"/>
+<img src="./docs/src/assets/jacc-metal.gif" width="60%" height="400"/>
 
 *JACC.jl on Apple M3 GPU*
 
