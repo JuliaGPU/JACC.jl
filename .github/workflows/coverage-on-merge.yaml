@@ -1,0 +1,89 @@
+name: coverage-on-merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  
+  cuda-1:
+    if: |
+      github.repository_owner == 'JuliaGPU'
+
+    runs-on: [self-hosted, Linux, X64, PC0130967]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [NVHPC25_9-CUDA13-JULIA1_11_7-CUDAJL5_9]
+
+    steps:
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          flags: cuda
+  
+  cuda-2:
+    if: |
+      github.repository_owner == 'JuliaGPU'
+
+    runs-on: [self-hosted, Linux, X64, pc-wfg]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [NVHPC25_9-CUDA12_9-JULIA1_12_0-CUDAJL5_9]
+    
+    steps:
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          flags: cuda
+
+  amdgpu:
+    if: |
+      github.repository_owner == 'JuliaGPU'
+
+    runs-on: [self-hosted, Linux, X64, ornl-excl-cousteau-1]
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [ROCM7-JULIA1_11_7-AMDGPU2]
+
+    steps:
+      - name: Upload Coverage
+        if: steps.check.outputs.triggered == 'true'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          flags: amdgpu
+
+  metal:
+    if: |
+      github.repository_owner == 'JuliaGPU'
+
+    runs-on: [self-hosted, ARM64, macOS, macminim1]
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [M1-JULIA1_12_3-MetalJL1_9]
+
+    steps:
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          flags: metal
