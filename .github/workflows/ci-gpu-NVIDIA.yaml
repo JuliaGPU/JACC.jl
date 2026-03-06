@@ -96,6 +96,7 @@ jobs:
           fail_ci_if_error: true
           base_sha: ${{fromJson(steps.request.outputs.data).head.sha}}
           override_pr: ${{ github.event.pull_request.number }}
+          flags: cuda
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
@@ -198,6 +199,7 @@ jobs:
           fail_ci_if_error: true
           base_sha: ${{fromJson(steps.request.outputs.data).head.sha}}
           override_pr: ${{ github.event.pull_request.number }}
+          flags: cuda
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
