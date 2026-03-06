@@ -17,3 +17,17 @@ comment: off
 codecov:
   notify:
     after_n_builds: 4
+
+flags:
+  cuda:
+    carryforward: true
+    paths: 
+      - ext/CUDAExt
+  amdgpu:
+    carryforward: true
+    paths:
+      - ext/AMDGPUExt
+  metal:
+    carryforward: true
+    paths:
+      - ext/MetalExt
