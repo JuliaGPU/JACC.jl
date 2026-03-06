@@ -60,7 +60,6 @@ jobs:
 
     steps:
       - name: Upload Coverage
-        if: steps.check.outputs.triggered == 'true'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -83,6 +82,7 @@ jobs:
       - name: Upload Coverage
         uses: codecov/codecov-action@v5
         with:
+          binary: /Users/wfg/Library/Python/3.13/bin/codecov-cli
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
           fail_ci_if_error: true
