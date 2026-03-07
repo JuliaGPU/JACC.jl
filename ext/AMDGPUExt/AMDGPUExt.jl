@@ -64,19 +64,23 @@ abstract type BlockIndexer2D end
 
 struct BlockIndexerBasic <: BlockIndexer2D end
 
+# COV_EXCL_START
 function (blkIter::BlockIndexerBasic)()
     i = (workgroupIdx().x - 1) * workgroupDim().x + workitemIdx().x
     j = (workgroupIdx().y - 1) * workgroupDim().y + workitemIdx().y
     return (i, j)
 end
+# COV_EXCL_STOP
 
 struct BlockIndexerSwapped <: BlockIndexer2D end
 
+# COV_EXCL_START
 function (blkIter::BlockIndexerSwapped)()
     j = (workgroupIdx().x - 1) * workgroupDim().x + workitemIdx().x
     i = (workgroupIdx().y - 1) * workgroupDim().y + workitemIdx().y
     return (i, j)
 end
+# COV_EXCL_STOP
 
 function _parallel_for(indexer::TI, f, (m, n), (M, N), x...) where {TI}
     kernel = @roc launch=false _parallel_for_amdgpu_MN(indexer, (M, N), f, x...)
@@ -203,7 +207,8 @@ function JACC.reduce_workspace(::AMDGPUBackend, tmp::AMDGPU.ROCArray{T},
     AMDGPUReduceWorkspace{T, JACC.Unmanaged}(tmp, init)
 end
 
-@inline function _init!(wk::AMDGPUReduceWorkspace{T, JACC.Managed}, blocks, init) where {T}
+@inline function _init!(
+        wk::AMDGPUReduceWorkspace{T, JACC.Managed}, blocks, init) where {T}
     if length(wk.tmp) != prod(blocks)
         wk.tmp = AMDGPU.ROCArray{typeof(init)}(undef, blocks)
     end
@@ -212,7 +217,8 @@ end
     return nothing
 end
 
-@inline function _init!(wk::AMDGPUReduceWorkspace{T, JACC.Unmanaged}, blocks, init) where {T}
+@inline function _init!(
+        wk::AMDGPUReduceWorkspace{T, JACC.Unmanaged}, blocks, init) where {T}
     nothing
 end
 
@@ -274,7 +280,8 @@ function JACC.parallel_reduce(f, ::AMDGPUBackend, N::Integer, x...; op, init)
     ret = fill!(AMDGPU.ROCArray{typeof(init)}(undef, blocks), init)
 
     kargs1 = kernel_args(N, op, ret, f, x...)
-    kernel1(kargs1...; groupsize = threads, gridsize = blocks, shmem = shmem_size)
+    kernel1(
+        kargs1...; groupsize = threads, gridsize = blocks, shmem = shmem_size)
 
     kargs2 = kernel_args(blocks, op, ret, rret)
     kernel2(kargs2...; groupsize = threads, gridsize = 1, shmem = shmem_size)
@@ -331,7 +338,8 @@ function JACC.parallel_reduce(f, ::AMDGPUBackend, (M, N)::NTuple{2, Integer},
 
     kargs1 = kernel_args((M, N), op, ret, f, x...)
     kernel1 = @roc launch=false _parallel_reduce_amdgpu_MN(kargs1...)
-    kernel1(kargs1...; groupsize = threads, gridsize = blocks, shmem = shmem_size)
+    kernel1(
+        kargs1...; groupsize = threads, gridsize = blocks, shmem = shmem_size)
     kargs2 = kernel_args(blocks, op, ret, rret)
     kernel2 = @roc launch=false reduce_kernel_amdgpu_MN(kargs2...)
     kernel2(kargs2...; groupsize = threads, gridsize = (1, 1),
@@ -347,6 +355,7 @@ end
         prod(dims), ids, f, x...; op = op, init = init)
 end
 
+# COV_EXCL_START
 @inline function _parallel_for_amdgpu(N, f, x...)
     i = (workgroupIdx().x - 1) * workgroupDim().x + workitemIdx().x
     i > N && return nothing
@@ -354,7 +363,8 @@ end
     return nothing
 end
 
-@inline function _parallel_for_amdgpu_MN(indexer::BlockIndexer2D, (M, N), f, x...)
+@inline function _parallel_for_amdgpu_MN(
+        indexer::BlockIndexer2D, (M, N), f, x...)
     i, j = indexer()
     i > M && return nothing
     j > N && return nothing
@@ -445,9 +455,12 @@ function _parallel_reduce_amdgpu_MN((M, N), op, ret, f, x...)
     for n in (8, 4, 2, 1)
         AMDGPU.sync_workgroup()
         if ti <= n && tj <= n
-            @inbounds shared_mem[ti, tj] = op(shared_mem[ti, tj], shared_mem[ti + n, tj + n])
-            @inbounds shared_mem[ti, tj] = op(shared_mem[ti, tj], shared_mem[ti, tj + n])
-            @inbounds shared_mem[ti, tj] = op(shared_mem[ti, tj], shared_mem[ti + n, tj])
+            @inbounds shared_mem[ti, tj] = op(
+                shared_mem[ti, tj], shared_mem[ti + n, tj + n])
+            @inbounds shared_mem[ti, tj] = op(
+                shared_mem[ti, tj], shared_mem[ti, tj + n])
+            @inbounds shared_mem[ti, tj] = op(
+                shared_mem[ti, tj], shared_mem[ti + n, tj])
         end
     end
 
@@ -471,9 +484,12 @@ function reduce_kernel_amdgpu_MN((M, N), op, red, ret)
     for n in (8, 4, 2, 1)
         AMDGPU.sync_workgroup()
         if i <= n && j <= n
-            @inbounds shared_mem[i, j] = op(shared_mem[i, j], shared_mem[i + n, j + n])
-            @inbounds shared_mem[i, j] = op(shared_mem[i, j], shared_mem[i, j + n])
-            @inbounds shared_mem[i, j] = op(shared_mem[i, j], shared_mem[i + n, j])
+            @inbounds shared_mem[i, j] = op(
+                shared_mem[i, j], shared_mem[i + n, j + n])
+            @inbounds shared_mem[i, j] = op(
+                shared_mem[i, j], shared_mem[i, j + n])
+            @inbounds shared_mem[i, j] = op(
+                shared_mem[i, j], shared_mem[i + n, j])
         end
     end
 
@@ -488,7 +504,7 @@ function JACC.shared(::AMDGPUBackend, x::AbstractVector)
     shmem = @ROCDynamicLocalArray(eltype(x), len)
     # 1D kernel or 2D kernel at y == 1 (to avoid concurrent writes)
     if workgroupDim().y == 1 || workitemIdx().y == 1
-        for i in workitemIdx().x:workgroupDim().x:len
+        for i in (workitemIdx().x):(workgroupDim().x):len
             @inbounds shmem[i] = x[i]
         end
     end
@@ -508,8 +524,8 @@ function JACC.shared(::AMDGPUBackend, x::AbstractMatrix)
             j_local = workitemIdx().y
             @inbounds shmem[i_local, j_local] = x[i_local, j_local]
         else
-            for i in workitemIdx().x:workgroupDim().x:size(x, 1)
-                for j in workitemIdx().y:workgroupDim().y:size(x, 2)
+            for i in (workitemIdx().x):(workgroupDim().x):size(x, 1)
+                for j in (workitemIdx().y):(workgroupDim().y):size(x, 2)
                     @inbounds shmem[i, j] = x[i, j]
                 end
             end
@@ -564,6 +580,7 @@ function JACC.shared(::AMDGPUBackend, x::AbstractArray)
     AMDGPU.sync_workgroup()
     return shmem
 end
+# COV_EXCL_STOP
 
 JACC.sync_workgroup(::AMDGPUBackend) = AMDGPU.sync_workgroup()
 

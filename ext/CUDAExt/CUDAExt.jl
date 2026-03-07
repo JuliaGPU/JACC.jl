@@ -66,19 +66,23 @@ abstract type BlockIndexer2D end
 
 struct BlockIndexerBasic <: BlockIndexer2D end
 
+# COV_EXCL_START
 function (blkIter::BlockIndexerBasic)()
     i = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     j = (blockIdx().y - 1) * blockDim().y + threadIdx().y
     return (i, j)
 end
+# COV_EXCL_STOP
 
 struct BlockIndexerSwapped <: BlockIndexer2D end
 
+# COV_EXCL_START
 function (blkIter::BlockIndexerSwapped)()
     j = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     i = (blockIdx().y - 1) * blockDim().y + threadIdx().y
     return (i, j)
 end
+# COV_EXCL_STOP
 
 function _parallel_for(indexer::TI, f, (m, n), (M, N), x...) where {TI}
     kargs = kernel_args(indexer, (M, N), f, x...)
@@ -149,7 +153,8 @@ function JACC.parallel_for(
     end
 end
 
-function JACC.parallel_for(f, ::CUDABackend, (L, M, N)::NTuple{3, Integer}, x...)
+function JACC.parallel_for(
+        f, ::CUDABackend, (L, M, N)::NTuple{3, Integer}, x...)
     numThreads = 32
     Lthreads = min(L, numThreads)
     Mthreads = min(M, numThreads)
@@ -194,7 +199,8 @@ mutable struct CUDAReduceWorkspace{T, TP <: JACC.WkProp} <: JACC.ReduceWorkspace
 end
 
 function JACC.reduce_workspace(::CUDABackend, init::T) where {T}
-    CUDAReduceWorkspace{T, JACC.Managed}(CUDA.CuArray{T}(undef, 0), CUDA.CuArray([init]))
+    CUDAReduceWorkspace{T, JACC.Managed}(
+        CUDA.CuArray{T}(undef, 0), CUDA.CuArray([init]))
 end
 
 function JACC.reduce_workspace(::CUDABackend, tmp::CUDA.CuArray{T},
@@ -202,7 +208,8 @@ function JACC.reduce_workspace(::CUDABackend, tmp::CUDA.CuArray{T},
     CUDAReduceWorkspace{T, JACC.Unmanaged}(tmp, init)
 end
 
-@inline function _init!(wk::CUDAReduceWorkspace{T, JACC.Managed}, blocks, init) where {T}
+@inline function _init!(
+        wk::CUDAReduceWorkspace{T, JACC.Managed}, blocks, init) where {T}
     if length(wk.tmp) != prod(blocks)
         wk.tmp = CUDA.CuArray{typeof(init)}(undef, blocks)
     end
@@ -211,7 +218,8 @@ end
     return nothing
 end
 
-@inline function _init!(wk::CUDAReduceWorkspace{T, JACC.Unmanaged}, blocks, init) where {T}
+@inline function _init!(
+        wk::CUDAReduceWorkspace{T, JACC.Unmanaged}, blocks, init) where {T}
     nothing
 end
 
@@ -331,6 +339,7 @@ end
         prod(dims), ids, f, x...; op = op, init = init)
 end
 
+# COV_EXCL_START
 @inline function _parallel_for_cuda(N, f, x...)
     i = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     i > N && return nothing
@@ -429,9 +438,12 @@ function _parallel_reduce_cuda_MN((M, N), op, ret, f, x...)
     for n in (8, 4, 2, 1)
         sync_threads()
         if (ti <= n && tj <= n)
-            @inbounds shared_mem[ti, tj] = op(shared_mem[ti, tj], shared_mem[ti + n, tj + n])
-            @inbounds shared_mem[ti, tj] = op(shared_mem[ti, tj], shared_mem[ti, tj + n])
-            @inbounds shared_mem[ti, tj] = op(shared_mem[ti, tj], shared_mem[ti + n, tj])
+            @inbounds shared_mem[ti, tj] = op(
+                shared_mem[ti, tj], shared_mem[ti + n, tj + n])
+            @inbounds shared_mem[ti, tj] = op(
+                shared_mem[ti, tj], shared_mem[ti, tj + n])
+            @inbounds shared_mem[ti, tj] = op(
+                shared_mem[ti, tj], shared_mem[ti + n, tj])
         end
     end
 
@@ -455,9 +467,12 @@ function reduce_kernel_cuda_MN((M, N), op, red, ret)
     for n in (8, 4, 2, 1)
         sync_threads()
         if i <= n && j <= n
-            @inbounds shared_mem[i, j] = op(shared_mem[i, j], shared_mem[i + n, j + n])
-            @inbounds shared_mem[i, j] = op(shared_mem[i, j], shared_mem[i, j + n])
-            @inbounds shared_mem[i, j] = op(shared_mem[i, j], shared_mem[i + n, j])
+            @inbounds shared_mem[i, j] = op(
+                shared_mem[i, j], shared_mem[i + n, j + n])
+            @inbounds shared_mem[i, j] = op(
+                shared_mem[i, j], shared_mem[i, j + n])
+            @inbounds shared_mem[i, j] = op(
+                shared_mem[i, j], shared_mem[i + n, j])
         end
     end
 
@@ -472,7 +487,7 @@ function JACC.shared(::CUDABackend, x::AbstractVector)
     shmem = CuDynamicSharedArray(eltype(x), len)
     # 1D kernel or 2D kernel at y == 1 (to avoid concurrent writes)
     if blockDim().y == 1 || threadIdx().y == 1
-        for i in threadIdx().x:blockDim().x:len
+        for i in (threadIdx().x):(blockDim().x):len
             @inbounds shmem[i] = x[i]
         end
     end
@@ -492,8 +507,8 @@ function JACC.shared(::CUDABackend, x::AbstractMatrix)
             j_local = threadIdx().y
             @inbounds shmem[i_local, j_local] = x[i_local, j_local]
         else
-            for i in threadIdx().x:blockDim().x:size(x, 1)
-                for j in threadIdx().y:blockDim().y:size(x, 2)
+            for i in (threadIdx().x):(blockDim().x):size(x, 1)
+                for j in (threadIdx().y):(blockDim().y):size(x, 2)
                     @inbounds shmem[i, j] = x[i, j]
                 end
             end
@@ -502,6 +517,7 @@ function JACC.shared(::CUDABackend, x::AbstractMatrix)
     sync_threads()
     return shmem
 end
+# COV_EXCL_STOP
 
 JACC.sync_workgroup(::CUDABackend) = CUDA.sync_threads()
 

@@ -246,6 +246,7 @@ end
         prod(dims), ids, f, x...; op = op, init = init)
 end
 
+# COV_EXCL_START
 function _parallel_reduce_metal(
         ::Val{shmem_length}, N, op, ret, f, x...) where {shmem_length}
     shared_mem = MtlThreadGroupArray(eltype(ret), shmem_length)
@@ -392,6 +393,7 @@ function _parallel_for_metal_LMN(L, M, N, f, x...)
     f(i, j, k, x...)
     return nothing
 end
+# COV_EXCL_STOP
 
 function JACC.default_float(::MetalBackend)
     return Float32
