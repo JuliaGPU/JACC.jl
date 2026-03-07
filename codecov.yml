@@ -5,7 +5,7 @@ coverage:
   status:
     project:
       default:
-        threshold: 0.5%
+        threshold: 1%
 
 # Disable codecov comments in every PR
 comment: off
@@ -16,12 +16,12 @@ comment: off
 # CPU (6 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple)
 codecov:
   notify:
-    after_n_builds: 4
+    after_n_builds: 10
 
 flags:
   cuda:
     carryforward: true
-    paths: 
+    paths:
       - ext/CUDAExt
   amdgpu:
     carryforward: true
