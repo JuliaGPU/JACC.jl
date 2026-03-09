@@ -1,0 +1,74 @@
+name: ci-static-checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  code-style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          show-versioninfo: "true"
+
+      - uses: julia-actions/cache@v2
+
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - uses: julia-actions/julia-format@v4
+        continue-on-error: true
+        with:
+          version: "1" # Set `version` to '1.0.54' if you need to use JuliaFormatter.jl v1.0.54 (default: '1')
+          suggestion-label: "format-suggest" # Leave this unset or empty to show suggestions for all PRs
+          paths: "src/, ext/, test/" # Leave this unset to format every file
+
+  jet-test-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          show-versioninfo: "true"
+
+      - uses: julia-actions/cache@v2
+
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - name: Instantiate
+        run: |
+          julia --project -e 'using Pkg; Pkg.add("JET"); Pkg.instantiate();'
+
+      - name: JET Report Package
+        continue-on-error: true
+        run: |
+          julia --project -e 'using JET, JACC; JET.test_package(JACC);'
+
+  aqua-test-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          show-versioninfo: "true"
+
+      - uses: julia-actions/cache@v2
+
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - name: Instantiate
+        run: |
+          julia --project -e 'using Pkg; Pkg.add("Aqua"); Pkg.instantiate();'
+
+      - name: Aqua Test All
+        continue-on-error: true
+        run: |
+          julia --project -e 'using Aqua, JACC; Aqua.test_all(JACC);'
