@@ -2,6 +2,7 @@ import CUDA
 
 @testset "TestBackend" begin
     @test JACC.backend == "cuda"
+    @test JACC.default_backend() == JACC.get_backend(JACC.Backend.cuda)
 end
 
 @testset "array_types" begin

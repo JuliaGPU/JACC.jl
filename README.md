@@ -7,12 +7,15 @@
 [![ci-gpu-NVIDIA](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-NVIDIA.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-NVIDIA.yaml)
 [![ci-gpu-AMD](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml)
 [![ci-gpu-Apple](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml)
+[![codecov](https://codecov.io/github/JuliaGPU/JACC.jl/branch/main/graph/badge.svg)](https://codecov.io/github/JuliaGPU/JACC.jl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/release/JuliaGPU/JACC.jl/all.svg)](https://github.com/JuliaGPU/JACC.jl/releases)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12117/badge)](https://www.bestpractices.dev/projects/12117)
 
 
-<img src="./docs/src/assets/jacc-metal.gif" width="60%" height="400"/>
+<img src="./docs/src/assets/jacc-metal.gif" width="90%" height="500"/>
 
-*JACC.jl on Apple M3 GPU*
+*JACC.jl on Apple M3 GPU* [source](./docs/src/assets/jacc-replay.jl)
 
 
 CPU/GPU portable `array`/`parallel_for`/`parallel_reduce` in Julia for productive science.
@@ -33,7 +36,7 @@ JACC.jl programming model provides:
 
   2. Julia HPC developers can use JACC.jl as a productive meta-programming layer that adds and communicates use-case and testing coverage to the ever-growing JuliaGPU ecosystem.
 
-  3. As a platform to advace research in portable parallel programming, e.g. [shared memory](https://ieeexplore.ieee.org/document/10938453), [multi-GPU](https://ieeexplore.ieee.org/document/11181490), [for science facilities](https://ieeexplore.ieee.org/document/10820586), etc.
+  3. As a platform to advance research in portable parallel programming systems, e.g. [shared memory](https://ieeexplore.ieee.org/document/10938453), [multi-GPU](https://ieeexplore.ieee.org/document/11181490), [for science experimental facilities](https://ieeexplore.ieee.org/document/10820586), etc.
 
 ## Support and Roadmap
 
@@ -65,14 +68,14 @@ Roadmap:
     julia> Pkg.add("JACC")
     ```
 
-2. Set a backend (outside code): `"cuda"`, `"amdgpu"`, or `"threads"` (default). This will generate a `LocalPreferences.toml` file.
+2. Set a backend (outside code): `"cuda"`, `"amdgpu"`, `"metal"`, `"oneapi"`, or `"threads"` (default). This will generate a `LocalPreferences.toml` file.
 
     ```julia
     julia> import JACC
     julia> JACC.set_backend("cuda")
     ```
     **NOTE:** This will also add the backend package (`CUDA.jl` in this case)
-    as a dependency to the current project.
+    as a dependency to the current project in Project.toml. Users can clean this using `unset_backend`.
 
 3. Import JACC and load appropriate extension. `@init_backend` inserts an `import` statement so that you don't have to reference a specific backend in your code. (It must therefore be called at a top-level scope.)
 

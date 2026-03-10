@@ -2,6 +2,7 @@ import AMDGPU
 
 @testset "TestBackend" begin
     @test JACC.backend == "amdgpu"
+    @test JACC.default_backend() == JACC.get_backend(JACC.Backend.amdgpu)
 end
 
 @testset "array_types" begin

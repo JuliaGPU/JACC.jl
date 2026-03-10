@@ -2,6 +2,7 @@ import oneAPI
 
 @testset "TestBackend" begin
     @test JACC.backend == "oneapi"
+    @test JACC.default_backend() == JACC.get_backend(JACC.Backend.oneapi)
 end
 
 @testset "array_types" begin

@@ -1,6 +1,7 @@
 
 @testset "TestBackend" begin
     @test JACC.backend == "threads"
+    @test JACC.default_backend() == JACC.get_backend(JACC.Backend.threads)
 end
 
 @testset "array_types" begin
