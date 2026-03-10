@@ -2,6 +2,7 @@ import Metal
 
 @testset "TestBackend" begin
     @test JACC.backend == "metal"
+    @test JACC.default_backend() == JACC.get_backend(JACC.Backend.metal)
 end
 
 @testset "zeros_type" begin

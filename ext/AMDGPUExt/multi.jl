@@ -28,15 +28,15 @@ end
 
 @inline JACC.Multi.device_id(::AMDGPUBackend, p::ArrayPart) = p.dev_id
 
-struct MultiArray{T,N,NG}
+struct MultiArray{T, N, NG}
     a1::Vector{ArrayPart{T, N}}
-    a2::Vector{ROCArray{T,N}}
-    orig_size
+    a2::Vector{ROCArray{T, N}}
+    orig_size::Any
 end
 
 JACC.to_host(x::MultiArray) = convert(Base.Array, x)
 
-@inline ghost_dims(x::MultiArray{T,N,NG}) where {T,N,NG} = NG
+@inline ghost_dims(x::MultiArray{T, N, NG}) where {T, N, NG} = NG
 @inline JACC.Multi.part_length(::AMDGPUBackend, x::MultiArray) = size(x.a2[1])[end]
 
 @inline process_param(x, dev_id) = x
@@ -46,10 +46,10 @@ JACC.Multi.multi_array_type(::AMDGPUBackend) = MultiArray
 
 # FIXME:
 #   - what about ghost elements
-function Base.convert(::Type{Base.Array}, x::MultiArray{T,1}) where {T}
+function Base.convert(::Type{Base.Array}, x::MultiArray{T, 1}) where {T}
     AMDGPU.device_id!(1)
     ndev = ndevices()
-    ret = Base.Array{T,1}(undef, x.orig_size)
+    ret = Base.Array{T, 1}(undef, x.orig_size)
     partlen = cld(x.orig_size, ndev)
     lastlen = x.orig_size - ((ndev - 1) * partlen)
     for i in 1:ndev
@@ -64,10 +64,10 @@ function Base.convert(::Type{Base.Array}, x::MultiArray{T,1}) where {T}
     return ret
 end
 
-function Base.convert(::Type{Base.Array}, x::MultiArray{T,2}) where {T}
+function Base.convert(::Type{Base.Array}, x::MultiArray{T, 2}) where {T}
     AMDGPU.device_id!(1)
     ndev = ndevices()
-    ret = Base.Array{T,2}(undef, x.orig_size)
+    ret = Base.Array{T, 2}(undef, x.orig_size)
     partlen = cld(x.orig_size[2], ndev)
     lastlen = x.orig_size[2] - ((ndev - 1) * partlen)
     for i in 1:ndev
@@ -76,21 +76,21 @@ function Base.convert(::Type{Base.Array}, x::MultiArray{T,2}) where {T}
             copyto!(
                 ret,
                 CartesianIndices(
-                    (1:size(x.a2[i],1),
-                    (((i - 1) * partlen) + 1):(i*lastlen))
+                    (1:size(x.a2[i], 1),
+                    (((i - 1) * partlen) + 1):(i * lastlen))
                 ),
                 x.a2[i],
-                CartesianIndices((1:size(x.a2[i],1), 1:lastlen)),
+                CartesianIndices((1:size(x.a2[i], 1), 1:lastlen))
             )
         else
             copyto!(
                 ret,
                 CartesianIndices(
-                    (1:size(x.a2[i],1),
-                    (((i - 1) * partlen) + 1):(i*partlen))
+                    (1:size(x.a2[i], 1),
+                    (((i - 1) * partlen) + 1):(i * partlen))
                 ),
                 x.a2[i],
-                CartesianIndices(x.a2[i]),
+                CartesianIndices(x.a2[i])
             )
         end
     end
@@ -113,7 +113,7 @@ function make_multi_array(x::Base.Vector{T}) where {T}
     end
 
     AMDGPU.device_id!(1)
-    return MultiArray{T,1,0}(devparts, parts, total_length)
+    return MultiArray{T, 1, 0}(devparts, parts, total_length)
 end
 
 function make_multi_array(x::Base.Vector{T}, ghost_dims) where {T}
@@ -138,7 +138,7 @@ function make_multi_array(x::Base.Vector{T}, ghost_dims) where {T}
     end
 
     AMDGPU.device_id!(1)
-    return MultiArray{T,1,ng}(devparts, parts, total_length)
+    return MultiArray{T, 1, ng}(devparts, parts, total_length)
 end
 
 function make_multi_array(x::Base.Matrix{T}) where {T}
@@ -156,7 +156,7 @@ function make_multi_array(x::Base.Matrix{T}) where {T}
     end
 
     AMDGPU.device_id!(1)
-    return MultiArray{T,2,0}(devparts, parts, size(x))
+    return MultiArray{T, 2, 0}(devparts, parts, size(x))
 end
 
 function make_multi_array(x::Base.Matrix{T}, ghost_dims) where {T}
@@ -171,17 +171,20 @@ function make_multi_array(x::Base.Matrix{T}, ghost_dims) where {T}
     for i in 1:ndev
         AMDGPU.device_id!(i)
         if i == 1
-            parts[i] = ROCArray(x[:, ((i - 1) * partlen + 1):(i * partlen + ng)])
+            parts[i] = ROCArray(x[
+                :, ((i - 1) * partlen + 1):(i * partlen + ng)])
         elseif i == ndev
-            parts[i] = ROCArray(x[:, ((i - 1) * partlen + 1 - ng):(i * partlen)])
+            parts[i] = ROCArray(x[
+                :, ((i - 1) * partlen + 1 - ng):(i * partlen)])
         else
-            parts[i] = ROCArray(x[:, ((i - 1) * partlen + 1 - ng):(i * partlen + ng)])
+            parts[i] = ROCArray(x[
+                :, ((i - 1) * partlen + 1 - ng):(i * partlen + ng)])
         end
         devparts[i] = ArrayPart(rocconvert(parts[i]), i, ndev, ng)
     end
 
     AMDGPU.device_id!(1)
-    return MultiArray{T,2,ng}(devparts, array_ret, size(x))
+    return MultiArray{T, 2, ng}(devparts, array_ret, size(x))
 end
 
 function JACC.Multi.array(::AMDGPUBackend, x::Base.Array; ghost_dims)
@@ -218,7 +221,8 @@ function JACC.Multi.ghost_shift(
     return ind
 end
 
-function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,1}) where {T}
+function JACC.Multi.sync_ghost_elems!(
+        ::AMDGPUBackend, arr::MultiArray{T, 1}) where {T}
     AMDGPU.device_id!(1)
     ndev = ndevices()
     ng = ghost_dims(arr)
@@ -232,8 +236,9 @@ function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,1}) whe
         tmp = Base.Array(arr.a2[i])
         size = length(tmp)
         AMDGPU.device_id!(i + 1)
-        ghost_lr = ROCArray(tmp[(size + 1 - 2*ng):(size - ng)])
-        @roc groupsize=32 gridsize=1 _multi_swap_ghost_lr(arr.a1[i + 1], ghost_lr)
+        ghost_lr = ROCArray(tmp[(size + 1 - 2 * ng):(size - ng)])
+        @roc groupsize=32 gridsize=1 _multi_swap_ghost_lr(
+            arr.a1[i + 1], ghost_lr)
     end
 
     #Right to left swapping
@@ -242,8 +247,9 @@ function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,1}) whe
         tmp = Base.Array(arr.a2[i])
         size = length(tmp)
         AMDGPU.device_id!(i - 1)
-        ghost_rl = ROCArray(tmp[(1 + ng):(2*ng)])
-        @roc groupsize=32 gridsize=1 _multi_swap_ghost_rl(arr.a1[i - 1], ghost_rl)
+        ghost_rl = ROCArray(tmp[(1 + ng):(2 * ng)])
+        @roc groupsize=32 gridsize=1 _multi_swap_ghost_rl(
+            arr.a1[i - 1], ghost_rl)
     end
 
     for i in 1:ndev
@@ -254,7 +260,8 @@ function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,1}) whe
     AMDGPU.device_id!(1)
 end
 
-function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,2}) where {T}
+function JACC.Multi.sync_ghost_elems!(
+        ::AMDGPUBackend, arr::MultiArray{T, 2}) where {T}
     AMDGPU.device_id!(1)
     ndev = ndevices()
     ng = ghost_dims(arr)
@@ -266,7 +273,7 @@ function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,2}) whe
     for i in 1:(ndev - 1)
         AMDGPU.device_id!(i)
         dim = size(arr.a2[i])
-        tmp = Base.Array(arr.a2[i][:, (dim[2] + 1 - 2*ng):(dim[2] - ng)])
+        tmp = Base.Array(arr.a2[i][:, (dim[2] + 1 - 2 * ng):(dim[2] - ng)])
         AMDGPU.device_id!(i + 1)
         ghost_lr = ROCArray(tmp)
         numThreads = 512
@@ -279,7 +286,7 @@ function JACC.Multi.sync_ghost_elems!(::AMDGPUBackend, arr::MultiArray{T,2}) whe
     #Right to left swapping
     for i in 2:ndev
         AMDGPU.device_id!(i)
-        tmp = Base.Array(arr.a2[i][:, (1 + ng):(2*ng)])
+        tmp = Base.Array(arr.a2[i][:, (1 + ng):(2 * ng)])
         AMDGPU.device_id!(i - 1)
         dim = size(arr.a2[i - 1])
         ghost_rl = ROCArray(tmp)
@@ -330,7 +337,8 @@ function JACC.Multi.copy!(::AMDGPUBackend, x::MultiArray, y::MultiArray)
                 size = length(x.a2[i])
                 threads = min(size, numThreads)
                 blocks = cld(size, threads)
-                @roc groupsize=threads gridsize=blocks _multi_copy(x.a1[i], y.a1[i])
+                @roc groupsize=threads gridsize=blocks _multi_copy(
+                    x.a1[i], y.a1[i])
             end
         end
 
@@ -353,7 +361,8 @@ function JACC.Multi.copy!(::AMDGPUBackend, x::MultiArray, y::MultiArray)
             Nblocks = cld(ssize[2], Nthreads)
             threads = (Mthreads, Nthreads)
             blocks = (Mblocks, Nblocks)
-            @roc groupsize=threads gridsize=blocks _multi_copy_2d(x.a1[i], y.a1[i])
+            @roc groupsize=threads gridsize=blocks _multi_copy_2d(
+                x.a1[i], y.a1[i])
         end
 
         for i in 1:ndev
@@ -511,6 +520,7 @@ function JACC.Multi.parallel_reduce(::AMDGPUBackend,
     return final_rret
 end
 
+# COV_EXCL_START
 function _multi_copy(x, y)
     i = (workgroupIdx().x - 1) * workgroupDim().x + workitemIdx().x
     if i <= length(x)
@@ -856,5 +866,6 @@ function _multi_reduce_kernel_amdgpu_MN((M, N), red, ret)
     end
     return nothing
 end
+# COV_EXCL_STOP
 
 end # module Multi
