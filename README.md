@@ -8,6 +8,8 @@
 [![ci-gpu-AMD](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml)
 [![ci-gpu-Apple](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml)
 [![codecov](https://codecov.io/github/JuliaGPU/JACC.jl/branch/main/graph/badge.svg)](https://codecov.io/github/JuliaGPU/JACC.jl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/release/JuliaGPU/JACC.jl/all.svg)](https://github.com/JuliaGPU/JACC.jl/releases)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12117/badge)](https://www.bestpractices.dev/projects/12117)
 
 
