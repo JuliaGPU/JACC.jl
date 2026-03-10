@@ -7,13 +7,13 @@
 [![ci-gpu-NVIDIA](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-NVIDIA.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-NVIDIA.yaml)
 [![ci-gpu-AMD](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml)
 [![ci-gpu-Apple](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml)
-[![codecov](https://codecov.io/github/JuliaGPU/JACC.jl/branch/main/graph/badge.svg)](https://codecov.io/github/JuliaGPU/JACC.jl)
+[![codecov](https://codecov.io/github/JuliaGPU/JACC.jl/graph/badge.svg?token=u4Td0r52ng)](https://codecov.io/github/JuliaGPU/JACC.jl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/JuliaGPU/JACC.jl/all.svg)](https://github.com/JuliaGPU/JACC.jl/releases)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12117/badge)](https://www.bestpractices.dev/projects/12117)
 
 
-<img src="./docs/src/assets/jacc-metal.gif" width="90%" height="500"/>
+<img src="./docs/src/assets/jacc-metal.gif" width="95%" height="650"/>
 
 *JACC.jl on Apple M3 GPU* [source](./docs/src/assets/jacc-replay.jl)
 
@@ -21,7 +21,7 @@
 CPU/GPU portable `array`/`parallel_for`/`parallel_reduce` in Julia for productive science.
 
 JACC.jl leverages the LLVM-based Julia language and ecosystem, in particular [JuliaGPU](https://juliagpu.org/), and [optional package
-extensions](https://julialang.org/blog/2023/04/julia-1.9-highlights/#package_extensions). Similar to portable layers like Kokkos, RAJA, or SYCL in C++, Julia users will have easy access to vendor-neutral CPU/GPU computing writing a single high-level source code, but in a language like Julia designed for science. 
+extensions](https://julialang.org/blog/2023/04/julia-1.9-highlights/#package_extensions). Similar to portable layers like Kokkos, RAJA, or SYCL in C++, Julia users will have easy access to vendor-neutral CPU/GPU computing writing a single 100% portable high-level source code, but in a language like Julia designed for science. 
 
 JACC.jl programming model provides:
   
@@ -32,7 +32,7 @@ JACC.jl programming model provides:
   3. Backend selection using Preferences.jl: `"threads"` (default), `"cuda"`, `"amdgpu"`, `"metal"` and `"oneAPI"`. Stored in Julia's `LocalPreferences.toml`, so code is 100% vendor-agnostic via `@init_backend`.
 
 ## Goals
-  1. JACC.jl provides easy access to GPU computing in Julia without having to learn the details of each backend or CPU/GPU parallel programming.
+  1. JACC.jl provides easy access to vendor-neutral parallel computing in Julia without having to learn the vendor-specific details of each backend or CPU/GPU parallel programming or extra code annotations. Developers can write CPU/GPU kernels interactively and deploy on multiple high-performance computing (HPC) platforms.
 
   2. Julia HPC developers can use JACC.jl as a productive meta-programming layer that adds and communicates use-case and testing coverage to the ever-growing JuliaGPU ecosystem.
 
@@ -60,12 +60,19 @@ Roadmap:
 
 ## Quick start
 
-1. JACC.jl is a registered Julia package. Install JACC.jl like any other Julia package:
+1. JACC.jl is a registered Julia package. Install JACC.jl using the Julia package manager:
 
     ```julia
     $ julia
     julia> import Pkg
     julia> Pkg.add("JACC")
+    ```
+    or 
+    
+    ```julia
+    julia> using JACC
+    julia> ] 
+    (tmp) pkg> add JACC
     ```
 
 2. Set a backend (outside code): `"cuda"`, `"amdgpu"`, `"metal"`, `"oneapi"`, or `"threads"` (default). This will generate a `LocalPreferences.toml` file.

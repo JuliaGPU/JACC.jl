@@ -14,7 +14,7 @@ As shown in the schematics, **`parallel_for`** (and **`parallel_reduce`**) const
 
 While the [JuliaGPU](https://juliagpu.org/) ecosystem provides powerful tools for GPU programming, JACC sits on top of these backends leveraging these capabilities to simplify the process of writing portable code that can run on both CPUs and GPUs without modification. Thus filling a gap in the Julia ecosystem for productive, high-level programming for performance portability across heterogeneous computing platforms.
 
-*JACC architecture overview*:
+*JACC architecture overview* - application image credit: CERFACS -
 
 ![JACC Architecture](assets/jacc.png)
 
