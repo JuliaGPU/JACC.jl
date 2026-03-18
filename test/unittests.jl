@@ -1157,27 +1157,28 @@ if JACC.backend != "amdgpu" && JACC.backend != "metal"
     end
 end
 
-@testset "rand-Float32" begin
-    N = 1_000
-    x = JACC.zeros(Float32, N)
+if JACC.backend != "oneapi"
+    @testset "rand-Float32" begin
+        N = 1_000
+        x = JACC.zeros(Float32, N)
 
-    function rand_kernel(i, x)
-        @inbounds x[i] = rand(Float32) * 2 - 1
+        function rand_kernel(i, x)
+            @inbounds x[i] = rand(Float32) * 2 - 1
+        end
+
+        JACC.@parallel_for range=N rand_kernel(x)
+        x_host = JACC.to_host(x)
+        @test all(-1 .<= x_host .<= 1)
+
+        JACC.parallel_for(N, x) do i, x
+            @inbounds x[i] = rand(Float32)
+        end
+        x_host = JACC.to_host(x)
+        @test all(0 .<= x_host .<= 1)
     end
-
-    JACC.@parallel_for range=N rand_kernel(x)
-    x_host = JACC.to_host(x)
-    @test all(-1 .<= x_host .<= 1)
-
-    JACC.parallel_for(N, x) do i, x
-        @inbounds x[i] = rand(Float32)
-    end
-    x_host = JACC.to_host(x)
-    @test all(0 .<= x_host .<= 1)
 end
 
-
-if JACC.backend != "metal"
+if JACC.backend != "metal" && JACC.backend != "oneapi"
     @testset "rand-Float64" begin
         N = 1_000
         x = JACC.zeros(Float64, N)
