@@ -16,16 +16,51 @@ Throw an `ArgumentError` if arrays do not have equal axes.
 
 See also [`copyto!`](@ref).
 """
-function transfer!(dst::AbstractArray{T, N}, src::AbstractArray{T, N}) where {T, N}
+function transfer!(dst::AbstractArray{T, N}, src::AbstractArray{
+        T, N}) where {T, N}
     axes(dst) == axes(src) || throw(ArgumentError(
-    "arrays must have the same axes for `transfer!` (consider using `copyto!`)"))
-    copyto!(dst, src)
+        "arrays must have the same axes for `transfer!` (consider using `copyto!`)"))
+    _transfer!(dst, IndexStyle(dst), src, IndexStyle(src))
     dst
+end
+
+function _transfer!(dst::AbstractArray{T}, ::IndexCartesian,
+        src::AbstractArray{T}, ::IndexStyle) where {T}
+    _cartesian_transfer!(dst, src)
+end
+
+function _transfer!(dst::AbstractArray{T}, ::IndexStyle,
+        src::AbstractArray{T}, ::IndexCartesian) where {T}
+    _cartesian_transfer!(dst, src)
+end
+
+function _transfer!(dst::AbstractArray{T}, ::IndexCartesian,
+        src::AbstractArray{T}, ::IndexCartesian) where {T}
+    _cartesian_transfer!(dst, src)
+end
+
+function _transfer!(dst::AbstractArray{T}, ::IndexLinear,
+        src::AbstractArray{T}, ::IndexLinear) where {T}
+    _linear_transfer!(dst, src)
+end
+
+function _cartesian_transfer!(dst::AbstractArray{T}, src::AbstractArray{T}) where {T}
+    copyto!(parent(dst), CartesianIndices(parentindices(dst)),
+        parent(src), CartesianIndices(parentindices(src)))
+end
+
+_prep_for_linear_copy(a::AbstractArray{T}, p::AbstractArray{T}) where {T} = a
+function _prep_for_linear_copy(a::AbstractArray{T}, p::Base.Array{T}) where {T}
+    unsafe_wrap(Base.Array, pointer(a), length(a))
+end
+
+function _linear_transfer!(dst::AbstractArray{T}, src::AbstractArray{T}) where {T}
+    copyto!(_prep_for_linear_copy(dst, parent(dst)), _prep_for_linear_copy(src, parent(src)))
 end
 
 array(x::AbstractArray) = to_device(x)
 
-array(::Type{T}, dims) where {T} = array_type(){T,length(dims)}(undef, dims)
+array(::Type{T}, dims) where {T} = array_type(){T, length(dims)}(undef, dims)
 array(::Type{T}, dims...) where {T} = array(T, dims)
 array(dims) = array(default_float(), dims)
 array(dims...) = array(dims)

@@ -87,9 +87,21 @@ end
     h1 = rand(Float32, 10)
     h2 = zeros(Float32, 10)
     JACC.transfer!(view(d, 6:8), view(h1, 2:4))
-    @test [ones(Float32, 5); h1[2:4]; ones(Float32, 2);] == to_host(d)
+    @test [ones(Float32, 5); h1[2:4]; ones(Float32, 2);] == JACC.to_host(d)
     JACC.transfer!(view(h2, 6:8), view(d, 6:8))
     @test [zeros(Float32, 5); h1[2:4]; zeros(Float32, 2);] == h2
+
+    # 2D
+    md = JACC.zeros(Float32, 10, 10)
+    mh = rand(Float32, 10, 10)
+    JACC.transfer!(md, mh)
+    @test mh == JACC.to_host(md)
+    md = JACC.zeros(Float32, 10, 10)
+    JACC.transfer!(view(md, 6:8, 6:8), view(mh, 2:4, 2:4))
+    mh2 = zeros(Float32, 10, 10)
+    copyto!(view(mh2, 6:8, 6:8), view(mh, 2:4, 2:4))
+    @test mh2 == JACC.to_host(md)
+
 end
 
 @testset "VectorAddLambda" begin
