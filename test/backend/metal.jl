@@ -20,3 +20,9 @@ end
     @test typeof(x) == MtlArray{Float32, 1, Metal.PrivateStorage}
     @test eltype(x) == Float32
 end
+
+include("preferences.jl")
+
+@testset "preferences" begin
+    test_preferences(:Metal)
+end

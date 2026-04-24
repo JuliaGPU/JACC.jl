@@ -51,3 +51,9 @@ end
     x = JACC.array(; type = Complex{Float32}, dims = (5, 5, 5))
     @test typeof(x) == Array{Complex{Float32}, 3}
 end
+
+include("preferences.jl")
+
+@testset "preferences" begin
+    test_preferences(:Threads)
+end
