@@ -67,3 +67,9 @@ end
     s2 = JACC.create_stream()
     @test s2 != s1
 end
+
+include("preferences.jl")
+
+@testset "preferences" begin
+    test_preferences(:oneAPI)
+end
