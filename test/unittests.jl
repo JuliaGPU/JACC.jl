@@ -61,6 +61,49 @@ end
     @test size(x) == (5, 5, 5)
 end
 
+@testset "transfer!" begin
+    N = 10
+    d = JACC.array(Float32, N)
+    h1 = rand(Float32, N)
+    h2 = zeros(Float32, N)
+    # transfer host to device
+    @test JACC.transfer!(d, h1) === d
+    @test h1 == JACC.to_host(d)
+
+    # transfer device to host
+    @test JACC.transfer!(h2, d) === h2
+    @test h1 == h2
+
+    # non equal axes will throw an argument error.
+    @test_throws ArgumentError JACC.transfer!(zeros(Float32, 3), JACC.ones(Float32, 2))
+    @test_throws ArgumentError JACC.transfer!(zeros(Float32, 3), JACC.ones(Float32, 4))
+
+    # mismatching element types or dim should throw a method error
+    @test_throws MethodError  JACC.transfer!(zeros(Int32, 3), JACC.ones(Float32, 3))
+    @test_throws MethodError  JACC.transfer!(zeros(Float32, 3, 1), JACC.ones(Float32, 3))
+
+    # transfer! with views should work as expected
+    d = JACC.ones(Float32, 10)
+    h1 = rand(Float32, 10)
+    h2 = zeros(Float32, 10)
+    JACC.transfer!(view(d, 6:8), view(h1, 2:4))
+    @test [ones(Float32, 5); h1[2:4]; ones(Float32, 2);] == JACC.to_host(d)
+    JACC.transfer!(view(h2, 6:8), view(d, 6:8))
+    @test [zeros(Float32, 5); h1[2:4]; zeros(Float32, 2);] == h2
+
+    # 2D
+    md = JACC.zeros(Float32, 10, 10)
+    mh = rand(Float32, 10, 10)
+    JACC.transfer!(md, mh)
+    @test mh == JACC.to_host(md)
+    md = JACC.zeros(Float32, 10, 10)
+    JACC.transfer!(view(md, 6:8, 6:8), view(mh, 2:4, 2:4))
+    mh2 = zeros(Float32, 10, 10)
+    copyto!(view(mh2, 6:8, 6:8), view(mh, 2:4, 2:4))
+    @test mh2 == JACC.to_host(md)
+
+end
+
 @testset "VectorAddLambda" begin
     function f(i, a)
         @inbounds a[i] += 5.0

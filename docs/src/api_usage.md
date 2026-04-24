@@ -60,6 +60,7 @@ JACC.@init_backend
 - **`JACC.fill`**: create a new array on the device filled with a specified value.
 - **`JACC.to_device`**: transfer an existing Julia array from host to device.
 - **`JACC.to_host`**: transfer an existing JACC array from device to host.
+- **`JACC.transfer!`**: in-place version of `to_device` or `to_host`.
    
 Advanced memory:
 - **`JACC.Multi module`**: allows the programmability of multiple-GPU devices on a single node without the need of MPI. Please see the paper [Valero-Lara et al. IEEE eScience 2025](https://ieeexplore.ieee.org/document/11181490) 
