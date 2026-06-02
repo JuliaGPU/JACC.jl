@@ -27,6 +27,10 @@ export shared
 export LaunchSpec
 export synchronize
 
+public zeros, ones, fill
+public to_device, to_host, transfer!
+public @parallel_for, @parallel_reduce
+
 ilog2(n::T) where {T <: Integer} = sizeof(T) * 8 - 1 - leading_zeros(n)
 
 default_stream() = default_stream(default_backend())

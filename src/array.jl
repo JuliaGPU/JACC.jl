@@ -1,7 +1,18 @@
 
 array_type() = array_type(default_backend())
 
+"""
+    JACC.to_device(x::AbstractArray)
+
+Transfer an existing Julia array from host to device.
+"""
 to_device(x::AbstractArray) = convert(array_type(), x)
+
+"""
+    JACC.to_host(x::AbstractArray)
+
+Transfer an existing Julia array from device to host.
+"""
 to_host(x::AbstractArray) = convert(Base.Array, x)
 
 """
@@ -58,18 +69,38 @@ function _linear_transfer!(dst::AbstractArray{T}, src::AbstractArray{T}) where {
     copyto!(_prep_for_linear_copy(dst, parent(dst)), _prep_for_linear_copy(src, parent(src)))
 end
 
-array(x::AbstractArray) = to_device(x)
+"""
+    array([T=default_float()], dims...)
 
+Create an uninitialized array on the device with the specified type and size.
+"""
+array(x::AbstractArray) = to_device(x)
 array(::Type{T}, dims) where {T} = array_type(){T, length(dims)}(undef, dims)
 array(::Type{T}, dims...) where {T} = array(T, dims)
 array(dims) = array(default_float(), dims)
 array(dims...) = array(dims)
 array(; type = default_float(), dims = 0) = array(type, dims)
 
+"""
+    JACC.zeros([T=default_float()], dims...)
+
+Create a new array on the device filled with zeros.
+"""
 zeros(::Type{T}, dims...) where {T} = zeros(default_backend(), T, dims...)
+
+"""
+    JACC.ones([T=default_float()], dims...)
+
+Create a new array on the device filled with ones.
+"""
 ones(::Type{T}, dims...) where {T} = ones(default_backend(), T, dims...)
 
 zeros(dims...) = zeros(default_float(), dims...)
 ones(dims...) = ones(default_float(), dims...)
 
+"""
+    JACC.fill(value, dims...)
+
+Create a new array on the device filled with a specified value.
+"""
 fill(value, dims...) = fill(default_backend(), value, dims...)
