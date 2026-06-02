@@ -1,5 +1,7 @@
 module ThreadsImpl
 
+import Polyester
+
 import JACC
 import JACC: LaunchSpec
 
@@ -12,7 +14,7 @@ function _maybe_threaded(ex)
         if Threads.nthreads() == 1
             $ex
         else
-            Threads.@threads :static $ex
+            Polyester.@batch $ex
         end
     end
 end
@@ -111,7 +113,7 @@ end
     nchunks = Threads.nthreads()
     chunks = collect(Base.Iterators.partition(1:N, cld(N, nchunks)))
     nchunks = length(chunks)
-    Threads.@threads :static for n in 1:nchunks
+    Polyester.@batch for n in 1:nchunks
         @inbounds begin
             tp = reducer.init
             for i in chunks[n]
@@ -164,7 +166,7 @@ end
     nchunks = Threads.nthreads()
     chunks = collect(Base.Iterators.partition(ids, cld(length(ids), nchunks)))
     nchunks = length(chunks)
-    Threads.@threads :static for n in 1:nchunks
+    Polyester.@batch for n in 1:nchunks
         @inbounds begin
             tp = reducer.init
             for ij in chunks[n]
