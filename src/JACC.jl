@@ -5,7 +5,6 @@ import Atomix: @atomic
 
 # module to set backend preferences
 include("preferences.jl")
-@init_backend
 
 get_backend(backend::Symbol) = get_backend(Val(backend))
 
