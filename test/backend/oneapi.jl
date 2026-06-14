@@ -27,28 +27,28 @@ end
     @test eltype(y) == Int32
 
     # fill
-    x = JACC.fill(10.0, N)
-    @test typeof(x) == oneVector{Float64, DeviceBuffer}
+    x = JACC.fill(FloatType(10.0), N)
+    @test typeof(x) == oneVector{FloatType, DeviceBuffer}
     y = JACC.fill(10, (N,))
     @test typeof(y) == oneVector{Int, DeviceBuffer}
-    x2 = JACC.fill(10.0, N, N)
-    @test typeof(x2) == oneMatrix{Float64, DeviceBuffer}
+    x2 = JACC.fill(FloatType(10.0), N, N)
+    @test typeof(x2) == oneMatrix{FloatType, DeviceBuffer}
     y2 = JACC.fill(10, (N, N))
     @test typeof(y2) == oneMatrix{Int, DeviceBuffer}
-    x3 = JACC.fill(10.0, N, N, N)
-    @test typeof(x3) == oneArray{Float64, 3, DeviceBuffer}
+    x3 = JACC.fill(FloatType(10.0), N, N, N)
+    @test typeof(x3) == oneArray{FloatType, 3, DeviceBuffer}
     y3 = JACC.fill(10, (N, N, N))
     @test typeof(y3) == oneArray{Int, 3, DeviceBuffer}
 
     # array
     x = JACC.array(N)
-    @test typeof(x) == oneVector{Float64, DeviceBuffer}
+    @test typeof(x) == oneVector{FloatType, DeviceBuffer}
     x = JACC.array(Float32, N)
     @test typeof(x) == oneVector{Float32, DeviceBuffer}
     a = JACC.array(5, 4)
     b = JACC.array((5, 4))
-    @test typeof(a) == oneMatrix{Float64, DeviceBuffer}
-    @test typeof(b) == oneMatrix{Float64, DeviceBuffer}
+    @test typeof(a) == oneMatrix{FloatType, DeviceBuffer}
+    @test typeof(b) == oneMatrix{FloatType, DeviceBuffer}
     x = JACC.array(; type = Int, dims = 10)
     @test typeof(x) == oneVector{Int, DeviceBuffer}
     x = JACC.array(; type = Complex{Float32}, dims = (5, 5, 5))
