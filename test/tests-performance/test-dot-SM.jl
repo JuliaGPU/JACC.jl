@@ -132,9 +132,9 @@ function dot_cuda(SIZE, x, y)
     blocks = ceil(Int, SIZE / threads)
     ret = CUDA.zeros(Float64, blocks)
     rret = CUDA.zeros(Float64, 1)
-    CUDA.@sync @cuda threads=threads blocks=blocks shmem=512 * sizeof(Float64) dot_cuda_kernel(
+    CUDA.@sync @cuda threads=threads blocks=blocks shmem=512*sizeof(Float64) dot_cuda_kernel(
         SIZE, ret, x, y)
-    CUDA.@sync @cuda threads=threads blocks=1 shmem=512 * sizeof(Float64) reduce_kernel(
+    CUDA.@sync @cuda threads=threads blocks=1 shmem=512*sizeof(Float64) reduce_kernel(
         blocks, ret, rret)
     return rret
 end
@@ -262,10 +262,10 @@ function dot_amdgpu(SIZE, x, y)
     blocks = ceil(Int, SIZE / threads)
     ret = AMDGPU.zeros(Float64, blocks)
     rret = AMDGPU.zeros(Float64, 1)
-    @roc groupsize=threads gridsize=threads * blocks localmem=512 *
-                                                              sizeof(Float64) dot_amdgpu_kernel(
+    @roc groupsize=threads gridsize=threads*blocks localmem=512*
+    sizeof(Float64) dot_amdgpu_kernel(
         SIZE, ret, x, y)
-    @roc groupsize=threads gridsize=threads localmem=512 * sizeof(Float64) reduce_kernel(
+    @roc groupsize=threads gridsize=threads localmem=512*sizeof(Float64) reduce_kernel(
         blocks, ret, rret)
     return rret
 end

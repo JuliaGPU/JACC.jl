@@ -61,7 +61,7 @@ function axpy_amdgpu((M, N), alpha, x, y)
     Nthreads = min(N, maxPossibleThreads)
     Nblocks = ceil(Int, N / Nthreads)
     @roc groupsize=(Mthreads, Nthreads) gridsize=(
-        Mthreads * Mblocks, Nthreads * Nblocks) axpy_amdgpu_kernel(alpha, x, y)
+        Mthreads*Mblocks, Nthreads*Nblocks) axpy_amdgpu_kernel(alpha, x, y)
 end
 
 SIZE = 50

@@ -113,7 +113,6 @@ end
     parallel_for(_RangesKernel{N}(), spec, length.(range), range, f, x...)
 end
 
-
 @inline function parallel_for(; range::TR, f, args::Tuple, kw...) where {TR}
     parallel_for(f, launch_spec(; kw...), range, args...)
 end
@@ -241,7 +240,8 @@ end
 
 @inline function parallel_reduce(f, spec::LaunchSpec{TBackend},
         range::NTuple{N, AbstractRange}, x...; kw...) where {TBackend, N}
-    parallel_reduce(_RangesKernel{N}(), spec, length.(range), range, f, x...; kw...)
+    parallel_reduce(
+        _RangesKernel{N}(), spec, length.(range), range, f, x...; kw...)
 end
 
 @inline function parallel_reduce(; range::TR, f, args::Tuple,

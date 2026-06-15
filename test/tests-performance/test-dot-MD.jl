@@ -105,7 +105,7 @@ function dot_cuda((M, N), x, y)
     Mthreads = min(M, maxPossibleThreads)
     Nthreads = min(N, maxPossibleThreads)
     ret = CUDA.zeros(1)
-    CUDA.@sync @cuda threads=(Mthreads, Nthreads) blocks=1 shmem=16 * 16 *
+    CUDA.@sync @cuda threads=(Mthreads, Nthreads) blocks=1 shmem=16*16*
                                                                  sizeof(Float64) dot_cuda_kernel(
         (M, N), ret, x, y)
     return ret[1]
@@ -261,8 +261,8 @@ function dot_amdgpu((M, N), x, y)
     Mthreads = min(M, numThreads)
     Nthreads = min(N, numThreads)
     ret = AMDGPU.zeros(1)
-    @roc groupsize=(Mthreads, Nthreads) gridsize=(Mthreads, Nthreads) localmem=16 *
-                                                                               16 *
+    @roc groupsize=(Mthreads, Nthreads) gridsize=(Mthreads, Nthreads) localmem=16*
+                                                                               16*
                                                                                sizeof(Float64) dot_amdgpu_kernel(
         (M, N), ret, x, y)
     return ret[1]

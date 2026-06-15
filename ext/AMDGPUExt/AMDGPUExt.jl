@@ -50,7 +50,7 @@ end
 function JACC.parallel_for(f, ::AMDGPUBackend, N::Integer, x...)
     kargs = _kernel_args(N, f, x...)
     kernel, shmem_size = _kernel_maxshmem(_parallel_for_amdgpu, kargs)
-    config = AMDGPU.launch_configuration(kernel, shmem = shmem_size)
+    config = AMDGPU.launch_configuration(kernel; shmem = shmem_size)
     threads = min(N, config.groupsize)
     blocks = cld(N, threads)
     kernel(kargs...; groupsize = threads, gridsize = blocks, shmem = shmem_size)
@@ -177,7 +177,7 @@ function JACC.parallel_for(
     Mblocks = cld(M, Mthreads)
     Nblocks = cld(N, Nthreads)
     kernel(kargs...; groupsize = (Lthreads, Mthreads, Nthreads),
-        gridsize = (Lblocks, Mblocks, Nblocks), shmem=shmem_size)
+        gridsize = (Lblocks, Mblocks, Nblocks), shmem = shmem_size)
     AMDGPU.synchronize()
 end
 
@@ -202,7 +202,7 @@ function JACC.parallel_for(f, spec::LaunchSpec{AMDGPUBackend},
         spec.blocks = (Lblocks, Mblocks, Nblocks)
     end
     kernel(kargs...; groupsize = spec.threads, gridsize = spec.blocks,
-        shmem=spec.shmem_size, stream=spec.stream)
+        shmem = spec.shmem_size, stream = spec.stream)
     if spec.sync
         AMDGPU.synchronize(spec.stream)
     end
