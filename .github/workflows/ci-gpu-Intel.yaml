@@ -78,7 +78,7 @@ jobs:
 
       - name: Cache Julia
         if: steps.check.outputs.triggered == 'true'
-        uses: julia-actions/cache@v3.x
+        uses: julia-actions/cache@v3
         with:
           depot: $HOME/.julia-clark
 
