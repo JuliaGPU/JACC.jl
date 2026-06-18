@@ -1034,8 +1034,8 @@ if JACC.backend != "amdgpu" && JACC.backend != "metal"
     @testset "Multi" begin
         # Unidimensional arrays
         SIZE = 10
-        x = round.(rand(Float64, SIZE) * 100)
-        y = round.(rand(Float64, SIZE) * 100)
+        x = round.(rand(FloatType, SIZE) * 100)
+        y = round.(rand(FloatType, SIZE) * 100)
         alpha = 2.5
         dx = JACC.Multi.array(x)
         dy = JACC.Multi.array(y)
@@ -1050,8 +1050,8 @@ if JACC.backend != "amdgpu" && JACC.backend != "metal"
 
         # Multidimensional arrays
         SIZE = 10
-        x = round.(rand(Float64, SIZE, SIZE) * 100)
-        y = round.(rand(Float64, SIZE, SIZE) * 100)
+        x = round.(rand(FloatType, SIZE, SIZE) * 100)
+        y = round.(rand(FloatType, SIZE, SIZE) * 100)
         alpha = 2.5
         dx = JACC.Multi.array(x)
         dy = JACC.Multi.array(y)
@@ -1082,19 +1082,19 @@ if JACC.backend != "amdgpu" && JACC.backend != "metal"
 
         SIZE = 10
         # Initialization of inputs
-        a1 = ones(SIZE)
-        a2 = ones(SIZE)
-        a3 = ones(SIZE)
-        r = ones(SIZE)
-        p = ones(SIZE)
-        s = zeros(SIZE)
-        x = zeros(SIZE)
-        r_old = zeros(SIZE)
-        r_aux = zeros(SIZE)
+        a1 = ones(FloatType, SIZE)
+        a2 = ones(FloatType, SIZE)
+        a3 = ones(FloatType, SIZE)
+        r = ones(FloatType, SIZE)
+        p = ones(FloatType, SIZE)
+        s = zeros(FloatType, SIZE)
+        x = zeros(FloatType, SIZE)
+        r_old = zeros(FloatType, SIZE)
+        r_aux = zeros(FloatType, SIZE)
         a2 = a2 * 4
-        r = r * 0.5
-        p = p * 0.5
-        cond = 1.0
+        r = r * FloatType(0.5)
+        p = p * FloatType(0.5)
+        cond = FloatType(1.0)
         ndev = JACC.Multi.ndev()
         gja1 = JACC.Multi.array(a1; ghost_dims = 1)
         gja2 = JACC.Multi.array(a2; ghost_dims = 1)
@@ -1117,13 +1117,13 @@ if JACC.backend != "amdgpu" && JACC.backend != "metal"
             JACC.Multi.copy!(js, gjs) #js = gjs
             alpha0 = JACC.Multi.parallel_reduce(SIZE, dot, jr, jr)
             alpha1 = JACC.Multi.parallel_reduce(SIZE, dot, jp, js)
-            alpha = alpha0 / alpha1
-            m_alpha = alpha * (-1.0)
+            alpha = FloatType(alpha0 / alpha1)
+            m_alpha = FloatType(alpha * FloatType(-1.0))
             JACC.Multi.parallel_for(SIZE, axpy, m_alpha, jr, js)
             JACC.Multi.parallel_for(SIZE, axpy, alpha, jx, jp)
             beta0 = JACC.Multi.parallel_reduce(SIZE, dot, jr, jr)
             beta1 = JACC.Multi.parallel_reduce(SIZE, dot, jr_old, jr_old)
-            beta = beta0 / beta1
+            beta = FloatType(beta0 / beta1)
             JACC.Multi.copy!(jr_aux, jr)
             JACC.Multi.parallel_for(SIZE, axpy, beta, jr_aux, jp)
             ccond = JACC.Multi.parallel_reduce(SIZE, dot, jr, jr)
