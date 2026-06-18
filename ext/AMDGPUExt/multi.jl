@@ -172,13 +172,13 @@ function make_multi_array(x::Base.Matrix{T}, ghost_dims) where {T}
         AMDGPU.device_id!(i)
         if i == 1
             parts[i] = ROCArray(x[
-                :, ((i - 1) * partlen + 1):(i * partlen + ng)])
+            :, ((i - 1) * partlen + 1):(i * partlen + ng)])
         elseif i == ndev
             parts[i] = ROCArray(x[
-                :, ((i - 1) * partlen + 1 - ng):(i * partlen)])
+            :, ((i - 1) * partlen + 1 - ng):(i * partlen)])
         else
             parts[i] = ROCArray(x[
-                :, ((i - 1) * partlen + 1 - ng):(i * partlen + ng)])
+            :, ((i - 1) * partlen + 1 - ng):(i * partlen + ng)])
         end
         devparts[i] = ArrayPart(rocconvert(parts[i]), i, ndev, ng)
     end

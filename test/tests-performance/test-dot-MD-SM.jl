@@ -166,11 +166,11 @@ function dot_cuda((M, N), x, y)
     Nblocks = ceil(Int, N / Nthreads)
     ret = CUDA.zeros(Float64, (Mblocks, Nblocks))
     rret = CUDA.zeros(Float64, 1)
-    CUDA.@sync @cuda threads=(Mthreads, Nthreads) blocks=(Mblocks, Nblocks) shmem=16 *
-                                                                                  16 *
+    CUDA.@sync @cuda threads=(Mthreads, Nthreads) blocks=(Mblocks, Nblocks) shmem=16*
+                                                                                  16*
                                                                                   sizeof(Float64) dot_cuda_kernel(
         (M, N), ret, x, y)
-    CUDA.@sync @cuda threads=(Mblocks, Nblocks) blocks=(1, 1) shmem=16 * 16 *
+    CUDA.@sync @cuda threads=(Mblocks, Nblocks) blocks=(1, 1) shmem=16*16*
                                                                     sizeof(Float64) reduce_kernel(
         (Mblocks, Nblocks), ret, rret)
     return rret
@@ -327,11 +327,11 @@ function dot_amdgpu((M, N), x, y)
     ret = AMDGPU.zeros(Float64, (Mblocks, Nblocks))
     rret = AMDGPU.zeros(Float64, 1)
     @roc groupsize=(Mthreads, Nthreads) gridsize=(
-        Mblocks * Mthreads, Nblocks * Nthreads) localmem=16 * 16 *
-                                                         sizeof(Float64) dot_amdgpu_kernel(
+        Mblocks*Mthreads, Nblocks*Nthreads) localmem=16*16*
+                                                     sizeof(Float64) dot_amdgpu_kernel(
         (M, N), ret, x, y)
-    @roc groupsize=(Mblocks, Nblocks) gridsize=(Mblocks, Nblocks) localmem=16 *
-                                                                           16 *
+    @roc groupsize=(Mblocks, Nblocks) gridsize=(Mblocks, Nblocks) localmem=16*
+                                                                           16*
                                                                            sizeof(Float64) reduce_kernel(
         (Mblocks, Nblocks), ret, rret)
     return rret

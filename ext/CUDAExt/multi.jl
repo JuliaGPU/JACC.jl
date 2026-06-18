@@ -175,7 +175,7 @@ function make_multi_array(x::Base.Matrix{T}, ghost_dims) where {T}
             parts[i] = CuArray(x[:, ((i - 1) * partlen + 1 - ng):(i * partlen)])
         else
             parts[i] = CuArray(x[
-                :, ((i - 1) * partlen + 1 - ng):(i * partlen + ng)])
+            :, ((i - 1) * partlen + 1 - ng):(i * partlen + ng)])
         end
         devparts[i] = ArrayPart(cudaconvert(parts[i]), i, ndev, ng)
     end

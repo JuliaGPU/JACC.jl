@@ -79,8 +79,8 @@ end
     @test_throws ArgumentError JACC.transfer!(zeros(Float32, 3), JACC.ones(Float32, 4))
 
     # mismatching element types or dim should throw a method error
-    @test_throws MethodError  JACC.transfer!(zeros(Int32, 3), JACC.ones(Float32, 3))
-    @test_throws MethodError  JACC.transfer!(zeros(Float32, 3, 1), JACC.ones(Float32, 3))
+    @test_throws MethodError JACC.transfer!(zeros(Int32, 3), JACC.ones(Float32, 3))
+    @test_throws MethodError JACC.transfer!(zeros(Float32, 3, 1), JACC.ones(Float32, 3))
 
     # transfer! with views should work as expected
     d = JACC.ones(Float32, 10)
@@ -101,7 +101,6 @@ end
     mh2 = zeros(Float32, 10, 10)
     copyto!(view(mh2, 6:8, 6:8), view(mh, 2:4, 2:4))
     @test mh2 == JACC.to_host(md)
-
 end
 
 @testset "VectorAddLambda" begin

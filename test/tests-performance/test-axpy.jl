@@ -52,7 +52,7 @@ function axpy_amdgpu(SIZE, alpha, x, y)
     maxPossibleThreads = 512
     threads = min(SIZE, maxPossibleThreads)
     blocks = ceil(Int, SIZE / threads)
-    @roc groupsize=threads gridsize=threads * blocks axpy_amdgpu_kernel(
+    @roc groupsize=threads gridsize=threads*blocks axpy_amdgpu_kernel(
         alpha, x, y)
 end
 

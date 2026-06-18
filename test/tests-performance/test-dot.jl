@@ -79,7 +79,7 @@ function dot_cuda(SIZE, x, y)
     maxPossibleThreads = 512
     threads = min(SIZE, maxPossibleThreads)
     ret = CUDA.zeros(1)
-    CUDA.@sync @cuda threads=threads blocks=1 shmem=512 * sizeof(Float64) dot_cuda_kernel(
+    CUDA.@sync @cuda threads=threads blocks=1 shmem=512*sizeof(Float64) dot_cuda_kernel(
         SIZE, ret, x, y)
     return ret[1]
 end
@@ -157,7 +157,7 @@ function dot_amdgpu(SIZE, x, y)
     maxPossibleThreads = 1024
     threads = min(SIZE, maxPossibleThreads)
     ret = AMDGPU.zeros(1)
-    @roc groupsize=threads gridsize=threads localmem=1024 * sizeof(Float64) dot_amdgpu_kernel(
+    @roc groupsize=threads gridsize=threads localmem=1024*sizeof(Float64) dot_amdgpu_kernel(
         SIZE, ret, x, y)
     return ret[1]
 end
