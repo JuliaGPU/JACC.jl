@@ -13,10 +13,10 @@ comment: off
 # From https://docs.codecov.com/docs/notifications#preventing-notifications-until-after-n-builds
 # Prevent notifications before completing the more stable workflows (6 CPU and 2 GPU NVIDIA)
 # Prevent notifications after merging PRs that run CPU jobs only.
-# CPU (6 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple)
+# CPU (6 jobs) and GPU (2 NVIDIA, 1 AMD, 1 Apple, 1 Intel)
 codecov:
   notify:
-    after_n_builds: 10
+    after_n_builds: 11
 
 flags:
   cuda:
@@ -27,6 +27,10 @@ flags:
     carryforward: true
     paths:
       - ext/AMDGPUExt
+  oneapi:
+    carryforward: true
+    paths:
+      - ext/oneAPIExt
   metal:
     carryforward: true
     paths:
