@@ -7,6 +7,7 @@
 [![ci-gpu-NVIDIA](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-NVIDIA.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-NVIDIA.yaml)
 [![ci-gpu-AMD](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-AMD.yaml)
 [![ci-gpu-Apple](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Apple.yaml)
+[![ci-gpu-Intel](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Intel.yaml/badge.svg)](https://github.com/JuliaGPU/JACC.jl/actions/workflows/ci-gpu-Intel.yaml)
 [![codecov](https://codecov.io/github/JuliaGPU/JACC.jl/graph/badge.svg?token=u4Td0r52ng)](https://codecov.io/github/JuliaGPU/JACC.jl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/JuliaGPU/JACC.jl/all.svg)](https://github.com/JuliaGPU/JACC.jl/releases)
@@ -25,14 +26,14 @@ extensions](https://julialang.org/blog/2023/04/julia-1.9-highlights/#package_ext
 
 JACC.jl programming model provides:
   
-  1. Portable `array`, `zeros`, `ones`, `fill` metaprogramming for the selected vendor backend (`CuArray`. `ROCArray`, `MtlArray`, etc.).
+  1. Unified and portable `array`, `zeros`, `ones`, `fill` allocation via metaprogramming for the selected vendor backend (`CuArray`. `ROCArray`, `oneArray`, `MtlArray`, etc.).
 
-  2. `parallel_for` and `parallel_reduce` kernel launching: (i) basic APIs for non-experts, and (ii) low-level control APIs for threads/blocks, synchronization, multi GPU, and shared memory usage.
+  2. `parallel_for` and `parallel_reduce` kernel launching: (i) basic high-level APIs for quick CPU/GPU parallelization access, and (ii) low-level APIs for threads/blocks, synchronization, multi GPU, streams, and shared memory usage.
 
-  3. Backend selection using Preferences.jl: `"threads"` (default), `"cuda"`, `"amdgpu"`, `"metal"` and `"oneAPI"`. Stored in Julia's `LocalPreferences.toml`, so code is 100% vendor-agnostic via `@init_backend`.
+  3. Backend selection using Preferences.jl: `"threads"` (default), `"cuda"`, `"amdgpu"`, `"metal"` and `"oneAPI"`. Stored in Julia's `LocalPreferences.toml`, so **code is 100% vendor-agnostic** via `import JACC; JACC.@init_backend`.
 
 ## Goals
-  1. JACC.jl provides easy access to vendor-neutral parallel computing in Julia without having to learn the vendor-specific details of each backend or CPU/GPU parallel programming or extra code annotations. Developers can write CPU/GPU kernels interactively and deploy on multiple high-performance computing (HPC) platforms.
+  1. JACC.jl provides easy access to vendor-neutral parallel computing in Julia without having to learn the vendor-specific details of each backend or CPU/GPU parallel programming or extra code annotations. Developers can write and test CPU/GPU kernels interactively on their laptops or desktops, and deploy on multiple high-performance computing (HPC) platforms.
 
   2. Julia HPC developers can use JACC.jl as a productive meta-programming layer that adds and communicates use-case and testing coverage to the ever-growing JuliaGPU ecosystem.
 
@@ -43,14 +44,15 @@ JACC.jl programming model provides:
 Julia provides a tight, interoperable ecosystem for GPU programming. Still, vendor support of some features may vary. The following table summarizes the current support status of JACC.jl features across different backends.
 
 
-| Feature \ Backend | CPU                 | CUDA              | AMDGPU | Metal | oneAPI            |
-| ----------------- | ------------------- | ----------------- | ------ | ----- | ----------------- |
-| CI                | ✅                   | ✅                 | ✅      | ✅     | TBD               |
-|                   | x86, Arm GH Runners | RTXA4000, GTX1080 | MI100  | M1    | TBD               |
-| Float64           | ✅                   | ✅                 | ✅      | ❌     | ✅  (if supported) |
-| `Multi` (GPU)     | N/A                 | ✅                 | ❌      | ❌     | ❌                 |
-| `shared`          | N/A                 | ✅                 | ✅      | ✅     | ✅                 |
-| `@atomic`         | ✅                   | ✅                 | ✅      | ✅     | ✅                 |
+| Feature \ Backend     | CPU                 | CUDA              | AMDGPU | Metal | oneAPI            |
+| --------------------- | ------------------- | ----------------- | ------ | ----- | ----------------- |
+| CI                    | ✅                   | ✅                 | ✅      | ✅     | TBD               |
+|                       | x86, Arm GH Runners | RTXA4000, GTX1080 | MI100  | M1    | A770              |
+| Float64               | ✅                   | ✅                 | ✅      | ❌     | ✅  (if supported) |
+| `Multi` (GPU)         | N/A                 | ✅                 | ❌      | ❌     | ✅                 |
+| `shared`              | N/A                 | ✅                 | ✅      | ✅     | ✅                 |
+| `@atomic`             | ✅                   | ✅                 | ✅      | ✅     | ✅                 |
+| use `rand` in kernels | ✅                   | ✅                 | ✅      | ✅     | ❌                 |
 
 Roadmap:
 

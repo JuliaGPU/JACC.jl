@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-  
   cuda-1:
     if: |
       github.repository_owner == 'JuliaGPU'
@@ -26,7 +25,7 @@ jobs:
           files: lcov.info
           fail_ci_if_error: true
           flags: cuda
-  
+
   cuda-2:
     if: |
       github.repository_owner == 'JuliaGPU'
@@ -37,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         jobname: [NVHPC25_9-CUDA12_9-JULIA1_12_0-CUDAJL5_9]
-    
+
     steps:
       - name: Upload Coverage
         uses: codecov/codecov-action@v5
@@ -52,7 +51,7 @@ jobs:
       github.repository_owner == 'JuliaGPU'
 
     runs-on: [self-hosted, Linux, X64, ornl-excl-cousteau-1]
-      
+
     strategy:
       fail-fast: false
       matrix:
@@ -67,12 +66,32 @@ jobs:
           fail_ci_if_error: true
           flags: amdgpu
 
+  oneapi:
+    if: |
+      github.repository_owner == 'JuliaGPU'
+
+    runs-on: [self-hosted, Linux, X64, clark]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [oneAPI2025.2-JULIA1_11_7]
+
+    steps:
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
+          flags: oneapi
+
   metal:
     if: |
       github.repository_owner == 'JuliaGPU'
 
     runs-on: [self-hosted, ARM64, macOS, macminim1]
-      
+
     strategy:
       fail-fast: false
       matrix:
