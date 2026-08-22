@@ -12,6 +12,7 @@ jobs:
       startsWith(github.event.comment.body, 'Test this please')
 
     runs-on: [self-hosted, Linux, X64, cousteau]
+    timeout-minutes: 180
 
     env:
       GH_JOBNAME: ${{matrix.jobname}}
@@ -46,13 +47,14 @@ jobs:
       # just like any other third-party service
       - name: Create PR status
         if: steps.check.outputs.triggered == 'true'
-        uses: geekdude/github-status-action-v2@v1.1.10
-        with:
-          authToken: ${{ secrets.GITHUB_TOKEN }}
-          context: "ci-gpu-AMD-MI100 ${{ matrix.jobname }}"
-          state: "pending"
-          sha: ${{fromJson(steps.request.outputs.data).head.sha}}
-          target_url: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors --connect-timeout 10 --max-time 30 \
+            -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ fromJson(steps.request.outputs.data).head.sha }} \
+            -d '{"state": "pending", "context": "ci-gpu-AMD-MI100 ${{ matrix.jobname }}", "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
 
       - name: Get PR information
         if: steps.check.outputs.triggered == 'true'
@@ -73,6 +75,8 @@ jobs:
 
       - name: Instantiate
         if: steps.check.outputs.triggered == 'true'
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: "0"
         run: |
           source ~/.bashrc
           julia --version
@@ -108,13 +112,14 @@ jobs:
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
-        uses: geekdude/github-status-action-v2@v1.1.10
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: "ci-gpu-AMD-MI100 ${{matrix.jobname}}"
-          state: ${{job.status}}
-          sha: ${{fromJson(steps.request.outputs.data).head.sha}}
-          target_url: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors --connect-timeout 10 --max-time 30 \
+            -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ fromJson(steps.request.outputs.data).head.sha }} \
+            -d '{"state": "${{ job.status == 'success' && 'success' || job.status == 'cancelled' && 'error' || 'failure' }}", "description": "job ${{ job.status }}", "context": "ci-gpu-AMD-MI100 ${{ matrix.jobname }}", "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
 
   excl-faraday-MI300A:
     if: |
@@ -123,6 +128,7 @@ jobs:
       startsWith(github.event.comment.body, 'Test this please')
 
     runs-on: [self-hosted, Linux, X64, faraday]
+    timeout-minutes: 180
 
     env:
       GH_JOBNAME: ${{matrix.jobname}}
@@ -157,13 +163,14 @@ jobs:
       # just like any other third-party service
       - name: Create PR status
         if: steps.check.outputs.triggered == 'true'
-        uses: geekdude/github-status-action-v2@v1.1.10
-        with:
-          authToken: ${{ secrets.GITHUB_TOKEN }}
-          context: "ci-gpu-AMD-MI300A ${{ matrix.jobname }}"
-          state: "pending"
-          sha: ${{fromJson(steps.request.outputs.data).head.sha}}
-          target_url: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors --connect-timeout 10 --max-time 30 \
+            -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ fromJson(steps.request.outputs.data).head.sha }} \
+            -d '{"state": "pending", "context": "ci-gpu-AMD-MI300A ${{ matrix.jobname }}", "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
 
       - name: Get PR information
         if: steps.check.outputs.triggered == 'true'
@@ -184,6 +191,8 @@ jobs:
 
       - name: Instantiate
         if: steps.check.outputs.triggered == 'true'
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: "0"
         run: |
           source ~/.bashrc
           julia --version
@@ -219,10 +228,11 @@ jobs:
 
       - name: Report PR status
         if: always() && steps.check.outputs.triggered == 'true'
-        uses: geekdude/github-status-action-v2@v1.1.10
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: "ci-gpu-AMD-MI300A ${{matrix.jobname}}"
-          state: ${{job.status}}
-          sha: ${{fromJson(steps.request.outputs.data).head.sha}}
-          target_url: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS --fail-with-body --retry 3 --retry-delay 5 --retry-all-errors --connect-timeout 10 --max-time 30 \
+            -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/statuses/${{ fromJson(steps.request.outputs.data).head.sha }} \
+            -d '{"state": "${{ job.status == 'success' && 'success' || job.status == 'cancelled' && 'error' || 'failure' }}", "description": "job ${{ job.status }}", "context": "ci-gpu-AMD-MI300A ${{ matrix.jobname }}", "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
