@@ -36,8 +36,9 @@ end
 
 # Considering real vectors for now
 function _rot(i, x, y, c, s)
-    @inbounds x[i] = c * x[i] + s * y[i]
-    @inbounds y[i] = -s * x[i] + c * y[i]
+    @inbounds xi = x[i]
+    @inbounds x[i] = c * xi + s * y[i]
+    @inbounds y[i] = -s * xi + c * y[i]
 end
 
 # function _rotmg(i, d1, d2, x1, y1)
@@ -49,10 +50,12 @@ function rotg(a, b)
         c = 1.0
         s = 0.0
         r = abs(a)
+        z = s
     elseif abs(a) == 0
         c = 0.0
         s = -sign(b)
         r = abs(b)
+        z = 1.0
     else
         r = sqrt(a * a + b * b)
         c = a / r

@@ -558,6 +558,37 @@ end
     JACC.BLAS.swap(1_000, jx, jy1)
     @test x == JACC.to_host(jx)
     @test y1 == JACC.to_host(jy1)
+
+    function seq_rot(N, x, y, c, s)
+        for i in 1:N
+            @inbounds xi = x[i]
+            @inbounds x[i] = c * xi + s * y[i]
+            @inbounds y[i] = -s * xi + c * y[i]
+        end
+    end
+
+    xr = collect(1.0:1000.0)
+    yr = collect(1000.0:-1.0:1.0)
+    jxr = JACC.array(xr)
+    jyr = JACC.array(yr)
+    c, s = cos(pi / 6), sin(pi / 6)
+    sq_before = xr .^ 2 .+ yr .^ 2
+
+    seq_rot(1_000, xr, yr, c, s)
+    JACC.BLAS.rot(1_000, jxr, jyr, c, s)
+    @test xr≈JACC.to_host(jxr) rtol=1e-8
+    @test yr≈JACC.to_host(jyr) rtol=1e-8
+    # A rotation is norm-preserving; it is not if y is updated from the new x.
+    # This must read the device result -- checking the sequential arrays proves nothing.
+    @test sq_before≈JACC.to_host(jxr) .^ 2 .+ JACC.to_host(jyr) .^ 2 rtol=1e-8
+
+    # Both degenerate branches must return rather than throw.
+    for (a, b) in ((3.0, 4.0), (3.0, 0.0), (0.0, 4.0))
+        r, z, c1, s1 = JACC.BLAS.rotg(a, b)
+        @test r≈hypot(a, b) rtol=1e-8
+        @test c1^2 + s1^2≈1.0 rtol=1e-8
+        @test isfinite(z)
+    end
 end
 
 @testset "Add-2D" begin
