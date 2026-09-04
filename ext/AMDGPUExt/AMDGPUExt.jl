@@ -154,7 +154,8 @@ function JACC.parallel_for(
     config = AMDGPU.launch_configuration(kernel; shmem = shmem_size)
     x_thr, y_thr = _block_shape_2d(config.groupsize, M, N)
     if cld(N, y_thr) > maxBlocks.y && maxBlocks.x >= maxBlocks.y
-        _parallel_for(BlockIndexerSwapped(), f, (N, M), (M, N), x...; name = name)
+        _parallel_for(
+            BlockIndexerSwapped(), f, (N, M), (M, N), x...; name = name)
     else
         blocks = (cld(M, x_thr), cld(N, y_thr))
         kernel(kargs...; groupsize = (x_thr, y_thr), gridsize = blocks,
@@ -201,7 +202,8 @@ function JACC.parallel_for(f, spec::LaunchSpec{AMDGPUBackend},
     # the basic grid would overflow the y-dimension limit.
     if spec.threads == 0
         kargs = _kernel_args(BlockIndexerBasic(), (M, N), f, x...)
-        kernel, shmem_size = _kernel_maxshmem(_parallel_for_amdgpu_MN, kargs, name)
+        kernel,
+        shmem_size = _kernel_maxshmem(_parallel_for_amdgpu_MN, kargs, name)
         if spec.shmem_size < 0
             spec.shmem_size = shmem_size
         end
@@ -223,9 +225,11 @@ function JACC.parallel_for(f, spec::LaunchSpec{AMDGPUBackend},
     else
         y_thr = spec.threads[2]
         if cld(N, y_thr) > maxBlocks.y && maxBlocks.x >= maxBlocks.y
-            _parallel_for(BlockIndexerSwapped(), f, spec, (N, M), (M, N), x...; name = name)
+            _parallel_for(BlockIndexerSwapped(), f, spec,
+                (N, M), (M, N), x...; name = name)
         else
-            _parallel_for(BlockIndexerBasic(), f, spec, (M, N), (M, N), x...; name = name)
+            _parallel_for(
+                BlockIndexerBasic(), f, spec, (M, N), (M, N), x...; name = name)
         end
     end
 end
