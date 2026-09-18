@@ -250,19 +250,18 @@ function JACC.parallel_reduce(f, ::oneAPIBackend, N::Integer, x...; op, init,
     ret_inst = oneAPI.oneArray{typeof(init)}(undef, 0)
     kernel1 = _make_kernel(_make_kname(name, "block_reduce"),
         _parallel_reduce_oneapi, Val(256), N, op, ret_inst, init, f, x...)
-    threads1 = oneAPI.launch_configuration(kernel1)
 
     rret = oneAPI.oneArray([init])
     kernel2 = _make_kernel(_make_kname(name, "grid_reduce"),
         _reduce_kernel_oneapi, Val(256), 1, op, ret_inst, init, rret)
-    threads2 = oneAPI.launch_configuration(kernel2)
 
     items = 256
     groups = cld(N, items)
 
     ret = oneAPI.oneArray{typeof(init)}(undef, groups)
 
-    kernel1(Val(items), N, op, ret, init, f, x...; items = items, groups = groups)
+    kernel1(
+        Val(items), N, op, ret, init, f, x...; items = items, groups = groups)
 
     kernel2(Val(items), groups, op, ret, init, rret; items = items, groups = 1)
     oneAPI.synchronize()
@@ -287,7 +286,8 @@ function JACC._parallel_reduce!(reducer::JACC.ParallelReduce{oneAPIBackend},
 
     kernel1 = _make_kernel(_make_kname(name, "block_reduce"),
         _parallel_reduce_oneapi_MN, (M, N), op, wk.tmp, init, f, x...)
-    kernel1((M, N), op, wk.tmp, init, f, x...; items = threads, groups = blocks,
+    kernel1(
+        (M, N), op, wk.tmp, init, f, x...; items = threads, groups = blocks,
         queue = reducer.stream)
 
     kernel2 = _make_kernel(_make_kname(name, "grid_reduce"),

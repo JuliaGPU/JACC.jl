@@ -154,7 +154,8 @@ function JACC.parallel_for(
     config = CUDA.launch_configuration(kernel.fun; shmem = shmem_size)
     x_thr, y_thr = _block_shape_2d(config.threads, M, N)
     if cld(N, y_thr) > maxBlocks.y && maxBlocks.x >= maxBlocks.y
-        _parallel_for(BlockIndexerSwapped(), f, (N, M), (M, N), x...; name = name)
+        _parallel_for(
+            BlockIndexerSwapped(), f, (N, M), (M, N), x...; name = name)
     else
         blocks = (cld(M, x_thr), cld(N, y_thr))
         kernel(kargs...; threads = (x_thr, y_thr), blocks = blocks,
@@ -192,7 +193,8 @@ function _parallel_for(indexer::TI, f, spec::LaunchSpec{CUDABackend}, (m, n),
 end
 
 function JACC.parallel_for(
-        f, spec::LaunchSpec{CUDABackend}, (M, N)::NTuple{2, Integer}, x...; name = nothing)
+        f, spec::LaunchSpec{CUDABackend},
+        (M, N)::NTuple{2, Integer}, x...; name = nothing)
     dev = CUDA.device()
     maxBlocks = (
         x = attribute(dev, CUDA.DEVICE_ATTRIBUTE_MAX_GRID_DIM_X),
@@ -203,7 +205,8 @@ function JACC.parallel_for(
     # the basic grid would overflow the y-dimension limit.
     if spec.threads == 0
         kargs = _kernel_args(BlockIndexerBasic(), (M, N), f, x...)
-        kernel, shmem_size = _kernel_maxshmem(_parallel_for_cuda_MN, kargs, name)
+        kernel,
+        shmem_size = _kernel_maxshmem(_parallel_for_cuda_MN, kargs, name)
         if spec.shmem_size < 0
             spec.shmem_size = shmem_size
         end
@@ -225,9 +228,11 @@ function JACC.parallel_for(
     else
         y_thr = spec.threads[2]
         if cld(N, y_thr) > maxBlocks.y && maxBlocks.x >= maxBlocks.y
-            _parallel_for(BlockIndexerSwapped(), f, spec, (N, M), (M, N), x...; name = name)
+            _parallel_for(BlockIndexerSwapped(), f, spec,
+                (N, M), (M, N), x...; name = name)
         else
-            _parallel_for(BlockIndexerBasic(), f, spec, (M, N), (M, N), x...; name = name)
+            _parallel_for(
+                BlockIndexerBasic(), f, spec, (M, N), (M, N), x...; name = name)
         end
     end
 end
@@ -354,7 +359,8 @@ function JACC.parallel_reduce(f, ::CUDABackend, N::Integer, x...; op, init,
     ret_inst = CUDA.CuArray{typeof(init)}(undef, 0)
 
     kargs1 = _kernel_args(N, op, ret_inst, init, f, x...)
-    kernel1, maxThreads_1 = _kernel_maxthreads(_parallel_reduce_cuda, kargs1,
+    kernel1,
+    maxThreads_1 = _kernel_maxthreads(_parallel_reduce_cuda, kargs1,
         _make_kname(name, "block_reduce"))
 
     rret = CUDA.CuArray([init])
