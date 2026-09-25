@@ -91,14 +91,14 @@ const _DEFAULT = Ref(String(default))
 const list = @load_preference("backends", ["threads"])
 const _LIST = Ref(deepcopy(list))
 const _PLACE = Ref(@load_preference("placement", Dict{String, String}()))
-const extension_preferences = @load_preference(
-    "extension_preferences", Dict{String, Any}())
+const extension_preferences = @load_preference("extension_preferences",
+    Dict{String, Any}())
 
 _serialize_extension_preference(value::Symbol) = String(value)
 function _serialize_extension_preference(value::AbstractDict)
     return Dict(
         String(key) => _serialize_extension_preference(item)
-        for (key, item) in value)
+    for (key, item) in value)
 end
 function _serialize_extension_preference(value::Union{Tuple, AbstractVector})
     return [_serialize_extension_preference(item) for item in value]
@@ -109,8 +109,8 @@ function _runtime_extension_preferences(preferences)
     return Dict{String, Dict{Symbol, Any}}(
         String(backend) => Dict{Symbol, Any}(
             Symbol(key) => value
-            for (key, value) in values)
-        for (backend, values) in preferences)
+        for (key, value) in values)
+    for (backend, values) in preferences)
 end
 
 const _EXT_PREFS = Ref(_runtime_extension_preferences(extension_preferences))
@@ -210,7 +210,7 @@ function _set_extension_preferences(backend::String, kw)
     serialize = Preferences.Backend._serialize_extension_preference
     persisted = Dict(
         name => serialize(settings)
-        for (name, settings) in preferences)
+    for (name, settings) in preferences)
     @set_preferences!("extension_preferences"=>persisted)
     Preferences.Backend._EXT_PREFS[] = preferences
     Preferences.Backend._EXT_PREFS_GENERATION[] += 1
