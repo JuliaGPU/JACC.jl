@@ -263,7 +263,7 @@ elem_access(args...) = args[end][args[1:(end - 1)]...]
         elem_access, array_size(a), a; op = op, init = init, kw...)
 end
 
-@inline parallel_reduce(a::AbstractArray; kw...) = parallel_reduce(+, a, kw...)
+@inline parallel_reduce(a::AbstractArray; kw...) = parallel_reduce(+, a; kw...)
 
 # TODO: range version:
 # - `parallel_reduce(<r>, a)`
