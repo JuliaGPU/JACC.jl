@@ -255,6 +255,15 @@ end
     end
 end
 
+@testset "reduce-mp" begin
+    a = JACC.ones(Int8, 150)
+    @test JACC.parallel_reduce(a) != 150 # Int8 can only go up to 127
+    @test JACC.parallel_reduce(a; type = Int32) == 150
+
+    b = JACC.to_device(round.(rand(Float16, 100) * 100))
+    @test JACC.parallel_reduce(min, b; type = JACC.default_float()) ≈ minimum(JACC.to_host(b))
+end
+
 @testset "reduce-ND" begin
     Nend = JACC.backend == "metal" ? 5 : 7
     for N in 3:Nend
