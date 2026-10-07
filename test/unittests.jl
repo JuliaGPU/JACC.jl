@@ -1169,6 +1169,16 @@ if JACC.backend != "metal"
         dx2 = JACC.Multi.array(x2_expected, ghost_dims = 1)
         @test JACC.to_host(dx2) == x2_expected
 
+        # 2D stretch
+        for (M, N) in ((256, 256), (257, 16), (1000, 16), (1000, 300))
+            A_h = ones(FloatType, (M, N))
+            A = JACC.Multi.array(A_h)
+            res = JACC.Multi.parallel_reduce((M, N), JACC.elem_access, A)
+            @test res ≈ sum(A_h)
+        end
+    end
+
+    @testset "CG Multi" begin
         # HPCG example
         function matvecmul(i, a1, a2, a3, x, y, ndev)
             ind = JACC.Multi.ghost_shift(i, a1)

@@ -796,33 +796,11 @@ function _multi_reduce_kernel_cuda_MN((M, N), red, ret)
 
     sid = ((i - 1) * 16) + j
     tmp::Float64 = 0.0
-    shared_mem[sid] = tmp
-
-    if M > 16 && N > 16
-        while ii <= M
-            jj = threadIdx().y
-            while jj <= N
-                tmp = tmp + @inbounds red[ii, jj]
-                jj += 16
-            end
-            ii += 16
-        end
-    elseif M > 16
-        while ii <= N
-            tmp = tmp + @inbounds red[ii, j]
-            ii += 16
-        end
-    elseif N > 16
-        while jj <= N
-            tmp = tmp + @inbounds red[i, jj]
-            jj += 16
-        end
-    elseif M <= 16 && N <= 16
-        if i <= M && j <= N
-            tmp = tmp + @inbounds red[i, j]
-        end
+    for ci in CartesianIndices((i:16:M, j:16:N))
+        tmp = +(tmp, @inbounds red[ci])
     end
-    shared_mem[sid] = tmp
+    @inbounds shared_mem[sid] = tmp
+
     sync_threads()
     if (i <= 8 && j <= 8)
         if (i + 8 <= M && j + 8 <= N)
