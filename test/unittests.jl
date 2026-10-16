@@ -376,6 +376,56 @@ end
     @test JACC.to_host(res)[] == 1
 end
 
+if JACC.backend == "oneapi"
+    @testset "scan" begin
+        # basic accumulate
+        N = 20
+        row_counts = rand(1:10, N)
+        row_starts = JACC.to_device(row_counts)
+        row_ends = JACC.to_device(row_counts)
+        JACC.Experimental.parallel_scan(N, JACC.to_device(row_counts), row_starts,
+                row_ends) do i, partial, final, counts, starts, ends
+            if final
+                starts[i] = partial[]
+            end
+            partial[] += counts[i]
+            if final
+                ends[i] = partial[]
+            end
+        end
+        @test JACC.to_host(row_ends) == accumulate(+, row_counts)
+
+        # reverse accumulate
+        row_ends = JACC.to_device(row_counts)
+        JACC.Experimental.parallel_scan(N:-1:1, row_ends) do i, partial, final, ends
+            partial[] += ends[i]
+            if final
+                ends[i] = partial[]
+            end
+        end
+        @test JACC.to_host(row_ends) == accumulate(+, row_counts[N:-1:1])[N:-1:1]
+
+        # kokkos example
+        N = 300 # testing with more than one block
+        in_scan = JACC.zeros(Int64, N)
+        ex_scan = JACC.zeros(Int64, N)
+        result = JACC.Experimental.parallel_scan(N, in_scan, ex_scan;
+                init = zero(Int64)) do i, partial_sum, is_final, in_scan, ex_scan
+            @inbounds begin
+                if is_final
+                    ex_scan[i] = partial_sum[]
+                end
+                partial_sum[] += (i - 1)
+                if is_final
+                    in_scan[i] = partial_sum[]
+                end
+            end
+        end
+        @test result == cld(N * (N - 1), 2)
+        @test JACC.to_host(in_scan) == accumulate(+, i - 1 for i in 1:N)
+    end
+end
+
 if JACC.backend != "oneapi"
     @testset "shared" begin
         N = 100
