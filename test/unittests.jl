@@ -851,6 +851,10 @@ end
     res = JACC.to_host(ret)[]
     @test res ≈ minimum(a_host)
 
+    ret = JACC.@parallel_reduce op=min a_device
+    res = JACC.to_host(ret)[]
+    @test res ≈ minimum(a_host)
+
     # 2D
     A2 = JACC.ones(M, N)
     B2 = JACC.ones(M, N)
@@ -867,6 +871,10 @@ end
     ret = JACC.@parallel_reduce range=(M, N) op=min init=Inf JACC.elem_access(A2)
     res = JACC.to_host(ret)[]
     @test res ≈ 1
+
+    ret = JACC.@parallel_reduce range=(3:8, 3:8) A2
+    res = JACC.to_host(ret)[]
+    @test res ≈ 36
 end
 
 @testset "UnitRange" begin
@@ -892,10 +900,10 @@ end
     @test A_host[:, 1] ≈ zeros(10)
     @test A_host[:, 10] ≈ zeros(10)
 
-    res = JACC.parallel_reduce(JACC.elem_access, 3:8, a)
+    res = JACC.parallel_reduce(a; range = 3:8)
     @test res ≈ 6.0
 
-    res = JACC.parallel_reduce(JACC.elem_access, (3:8, 3:8), A)
+    res = JACC.parallel_reduce(A; range = (3:8, 3:8))
     @test res ≈ 36.0
 end
 

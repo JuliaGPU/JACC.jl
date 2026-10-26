@@ -14,6 +14,8 @@ get_backend_type(backend::Symbol) = get_backend(Val(backend))
 
 const IDims = Union{Integer, NTuple{2, Integer}, NTuple{3, Integer}}
 const AllDims = Union{Integer, NTuple{N, Integer}} where {N}
+const DimRange = Union{AbstractRange, NTuple{N, AbstractRange}} where {N}
+const AnyRange = Union{AllDims, DimRange}
 
 include("array.jl")
 include("blas.jl")
@@ -259,17 +261,12 @@ elem_access(i, j, a::AbstractMatrix) = a[i, j]
 elem_access(i, j, k, a::AbstractArray{T, 3}) where {T} = a[i, j, k]
 elem_access(args...) = args[end][args[1:(end - 1)]...]
 
-@inline function parallel_reduce(
-        op, a::AbstractArray; init = default_init(eltype(a), op), kw...)
-    return parallel_reduce(
-        elem_access, array_size(a), a; op = op, init = init, kw...)
+@inline function parallel_reduce(op, a::AbstractArray; range = array_size(a),
+        init = default_init(eltype(a), op), kw...)
+    return parallel_reduce(elem_access, range, a; op = op, init = init, kw...)
 end
 
 @inline parallel_reduce(a::AbstractArray; kw...) = parallel_reduce(+, a; kw...)
-
-# TODO: range version:
-# - `parallel_reduce(<r>, a)`
-# - `parallel_reduce(<r>, op, a)`
 
 @inline function parallel_reduce(spec::LaunchSpec, op, a::AbstractArray;
         init = default_init(eltype(a), op), kw...)
