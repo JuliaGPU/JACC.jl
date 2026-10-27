@@ -8,7 +8,6 @@ const oneAPITag = Type{oneAPIBackend}
 
 include("array.jl")
 include("async.jl")
-include("experimental/experimental.jl")
 
 default_stream() = oneAPI.global_queue(oneAPI.context(), oneAPI.device())
 
@@ -544,5 +543,7 @@ function JACC.default_float(::oneAPITag)
 end
 
 include("multi.jl")
+
+include("experimental/experimental.jl")
 
 end # module oneAPIExt

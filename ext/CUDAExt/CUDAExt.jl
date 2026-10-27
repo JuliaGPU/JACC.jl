@@ -10,7 +10,6 @@ const CUDATag = Type{CUDABackend}
 include("array.jl")
 include("multi.jl")
 include("async.jl")
-include("experimental/experimental.jl")
 
 default_stream() = CUDA.stream()
 
@@ -645,5 +644,7 @@ JACC.sync_workgroup(::CUDATag) = CUDA.sync_threads()
 JACC.array_type(::CUDATag) = CUDA.CuArray
 
 JACC.array(::CUDATag, x::AbstractArray) = CUDA.CuArray(x)
+
+include("experimental/experimental.jl")
 
 end # module CUDAExt
