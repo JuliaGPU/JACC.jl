@@ -376,7 +376,7 @@ end
     @test JACC.to_host(res)[] == 1
 end
 
-if JACC.backend == "oneapi"
+if JACC.backend in ["oneapi", "cuda"]
     @testset "scan" begin
         # basic accumulate
         N = 20
