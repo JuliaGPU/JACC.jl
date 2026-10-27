@@ -1,4 +1,6 @@
-redirect_stderr(devnull)
+if "-q" in ARGS
+    redirect_stderr(devnull)
+end
 
 import JACC
 JACC.@init_backend
