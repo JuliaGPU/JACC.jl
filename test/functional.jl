@@ -1,26 +1,21 @@
 import JACC
 import LibGit2
 
-# if get(ENV, "JACC_INCLUDE_CONSUMER_TESTS", "false") == "true"
+if parse(Bool, get(ENV, "JACC_INCLUDE_CONSUMER_TESTS", "true"))
+
+    include(joinpath("consumer", "test_consumer.jl"))
 
     @testset "consumer_local" begin
-        script_dir = joinpath("consumer", "local")
-        script = joinpath(script_dir, "script.jl")
-        params = `$(pkgdir(JACC)) $(JACC.backend)`
-        ret = run(`$(Base.julia_cmd()) $script $params`).exitcode
-        rm(joinpath(script_dir, "Manifest.toml"))
-        rm(joinpath(script_dir, "Project.toml"))
+        # pkg_code = ` 'using Pkg; Pkg.develop(path=ARGS[1])' `
+        pkg_code = "using Pkg; Pkg.develop(path=ARGS[1])"
+        ret = test_consumer(pkg_code, pkgdir(JACC), JACC.backend)
         @test ret == 0
     end
 
     @testset "consumer_remote" begin
-        script_dir = joinpath("consumer", "remote")
-        script = joinpath(script_dir, "script.jl")
-        params = `$(LibGit2.head(pkgdir(JACC))) $(JACC.backend)`
-        ret = run(`$(Base.julia_cmd()) $script $params`).exitcode
-        rm(joinpath(script_dir, "Manifest.toml"))
-        rm(joinpath(script_dir, "Project.toml"))
+        pkg_code = "using Pkg; Pkg.add(name=\"JACC\", rev=ARGS[1])"
+        ret = test_consumer(pkg_code, LibGit2.head(pkgdir(JACC)), JACC.backend)
         @test ret == 0
     end
 
-# end
+end
