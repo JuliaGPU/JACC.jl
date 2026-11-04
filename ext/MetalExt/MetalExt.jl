@@ -476,12 +476,12 @@ JACC.array_type(::MetalTag) = Metal.MtlArray
 function _compute_array_storage()
     preferences = get(
         JACC.Preferences.Backend._EXT_PREFS[], "metal", Dict{Symbol, Any}())
-    value = get(preferences, :storage, "private")
+    value = get(preferences, :storage, "")
     value isa Union{AbstractString, Symbol} || throw(ArgumentError(
         "Invalid Metal array storage: $(repr(value)); " *
         "expected :private or :shared"))
     storage = lowercase(String(value))
-    storage in ("private", "shared") || throw(ArgumentError(
+    storage in ("private", "shared", "") || throw(ArgumentError(
         "Invalid Metal array storage: $(repr(value)); " *
         "expected :private or :shared"))
     return storage
@@ -508,10 +508,14 @@ function _array_storage()
 end
 
 function JACC._array(::MetalTag, x::AbstractArray)
-    if _array_storage() == "shared"
+    storage = _array_storage()
+    if storage == "shared"
         return Metal.MtlArray{eltype(x), ndims(x), Metal.SharedStorage}(x)
+    elseif storage == "private"
+        return Metal.MtlArray{eltype(x), ndims(x), Metal.PrivateStorage}(x)
+    else
+        return Metal.MtlArray{eltype(x), ndims(x), Metal.DefaultStorageMode}(x)
     end
-    return Metal.MtlArray{eltype(x), ndims(x), Metal.PrivateStorage}(x)
 end
 
 JACC._array(::MetalTag, x::Metal.MtlArray) = x
