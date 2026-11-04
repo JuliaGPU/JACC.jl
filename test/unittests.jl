@@ -717,25 +717,16 @@ end
         @test JACC.to_host(C)≈C_expected rtol=1e-5
     end
 
-    if JACC.backend != "metal"
-        let N = 7
-            dims, A, B, C = init_add(N)
-            JACC.parallel_for(
-                dims, A, B, C) do i1, i2, i3, i4, i5, i6, i7, A, B, C
-                id = CartesianIndex(i1, i2, i3, i4, i5, i6, i7)
-                C[id] = A[id] + B[id]
-            end
-            C_expected = Float32(2.0) .* ones(Float32, dims)
-            @test JACC.to_host(C)≈C_expected rtol=1e-5
+    let N = 7
+        dims, A, B, C = init_add(N)
+        JACC.parallel_for(
+            dims, A, B, C) do i1, i2, i3, i4, i5, i6, i7, A, B, C
+            id = CartesianIndex(i1, i2, i3, i4, i5, i6, i7)
+            C[id] = A[id] + B[id]
         end
+        C_expected = Float32(2.0) .* ones(Float32, dims)
+        @test JACC.to_host(C)≈C_expected rtol=1e-5
     end
-end
-
-# Registered at top level rather than in the `else` above: ReTest prints only
-# top-level testset names, so a skip nested inside "Add-ND" contributes neither
-# a name nor a Broken count to the summary.
-if JACC.backend == "metal"
-    @skipped_testset "Add-ND 7-D" "fails on the M1 runner, passes on M3"
 end
 
 @testset "do" begin

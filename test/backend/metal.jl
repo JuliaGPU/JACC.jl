@@ -9,7 +9,7 @@ end
     using Metal
     N = 10
     x = JACC.zeros(Float32, N)
-    @test typeof(x) == MtlArray{Float32, 1, Metal.PrivateStorage}
+    @test typeof(x) == MtlArray{Float32, 1, Metal.DefaultStorageMode}
     @test eltype(x) == Float32
 end
 
@@ -17,7 +17,7 @@ end
     using Metal
     N = 10
     x = JACC.ones(Float32, N)
-    @test typeof(x) == MtlArray{Float32, 1, Metal.PrivateStorage}
+    @test typeof(x) == MtlArray{Float32, 1, Metal.DefaultStorageMode}
     @test eltype(x) == Float32
 end
 
@@ -27,11 +27,11 @@ end
     N = 10
     h = ones(Float32, N)
     x = JACC.array(h)
-    @test typeof(x) == MtlArray{Float32, 1, Metal.PrivateStorage}
+    @test typeof(x) == MtlArray{Float32, 1, Metal.DefaultStorageMode}
     @test JACC.array(x) === x
     @test JACC.array(JACC.default_backend_type(), x) === x
     @test JACC.array(JACC.default_backend_type(), h) isa
-          MtlArray{Float32, 1, Metal.PrivateStorage}
+          MtlArray{Float32, 1, Metal.DefaultStorageMode}
     try
         @suppress JACC.set_backend("Metal"; storage = :shared)
         preferences = load_preference(JACC, "extension_preferences")
