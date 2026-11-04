@@ -1175,6 +1175,53 @@ if JACC.backend != "metal"
             res = JACC.Multi.parallel_reduce((M, N), JACC.elem_access, A)
             @test res ≈ sum(A_h)
         end
+
+        # ghost elements (1D)
+        SIZE = 1000
+        da1g = JACC.Multi.array(zeros(Int, SIZE); ghost_dims = 1)
+        JACC.Multi.parallel_for(SIZE, da1g) do i, a
+            ind = JACC.Multi.ghost_shift(i, a)
+            a[ind] = JACC.Multi.device_id(a)
+        end
+        JACC.Multi.sync_ghost_elems!(da1g)
+        JACC.Multi.parallel_for(SIZE, da1g) do i, a
+            ind = JACC.Multi.ghost_shift(i, a)
+            dev = JACC.Multi.device_id(a)
+            if dev != 1
+                a[ind] = a[ind - 1]
+            end
+        end
+        a1g = JACC.to_host(da1g)
+        part_len = JACC.Multi.part_length(da1g)
+        for p in 1:(JACC.Multi.ndev() - 1)
+            @test a1g[p * part_len] == p
+            @test a1g[p * part_len + 1] == p
+            @test a1g[p * part_len + 2] == p + 1
+        end
+
+        # ghost elements (2D)
+        M = 13
+        da2g = JACC.Multi.array(zeros(Int, M, SIZE); ghost_dims = 1)
+        JACC.Multi.parallel_for((M, SIZE), da2g) do i, j, a
+            si, sj = JACC.Multi.ghost_shift((i, j), a)
+            a[si, sj] = JACC.Multi.device_id(a)
+        end
+        JACC.Multi.sync_ghost_elems!(da2g)
+        JACC.Multi.parallel_for((M, SIZE), da2g) do i, j, a
+            si, sj = JACC.Multi.ghost_shift((i, j), a)
+            if JACC.Multi.device_id(a) != 1
+                a[si, sj] = a[si, sj - 1]
+            end
+        end
+        a2g = JACC.to_host(da2g)
+        part_len = JACC.Multi.part_length(da2g)
+        for p in 1:(JACC.Multi.ndev() - 1)
+            for i in 1:M
+                @test a2g[i, p * part_len] == p
+                @test a2g[i, p * part_len + 1] == p
+                @test a2g[i, p * part_len + 2] == p + 1
+            end
+        end
     end
 
     @testset "CG Multi" begin

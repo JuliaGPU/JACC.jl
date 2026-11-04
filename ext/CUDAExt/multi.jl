@@ -18,6 +18,7 @@ struct ArrayPart{T, N}
 end
 
 @inline Base.size(p::ArrayPart) = size(p.a)
+@inline Base.size(p::ArrayPart, d) = size(p.a, d)
 @inline Base.length(p::ArrayPart) = length(p.a)
 @inline Base.getindex(p::ArrayPart, i) = getindex(p.a, i)
 @inline Base.getindex(p::ArrayPart, i, j) = getindex(p.a, i, j)
@@ -37,7 +38,7 @@ end
 JACC.to_host(x::MultiArray) = convert(Base.Array, x)
 
 @inline ghost_dims(x::MultiArray{T, N, NG}) where {T, N, NG} = NG
-@inline JACC.Multi.part_length(::CUDATag, x::MultiArray) = size(x.a2[1])[end]
+@inline JACC.Multi.part_length(::CUDATag, x::MultiArray) = size(x.a2[1])[end] - ghost_dims(x)
 
 @inline process_param(x, dev_id) = x
 @inline process_param(x::MultiArray, dev_id) = x.a1[dev_id]
