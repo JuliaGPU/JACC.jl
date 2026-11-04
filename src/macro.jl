@@ -1,5 +1,5 @@
 function _construct_call(api_func, valid_keys, args...)
-    call = args[end]
+    expr = args[end]
 
     kwargs = map(args[1:(end - 1)]) do kwarg
         if kwarg isa Symbol
@@ -11,21 +11,34 @@ function _construct_call(api_func, valid_keys, args...)
         end
     end
 
-    Meta.isexpr(call, :call) ||
-        throw(ArgumentError("last argument should be a kernel function call"))
-    func = call.args[1]
-    args = call.args[2:end]
-
+    have_range = false
     for kwarg in kwargs
         key::Symbol, val = kwarg.args
 
         if !(key in valid_keys)
             throw(ArgumentError("Unsupported keyword argument '$key'"))
         end
+
+        if key === :range
+            have_range = true
+        end
     end
 
-    return quote
-        $api_func(; f = $func, args = ($(args...),), $(kwargs...))
+    if Meta.isexpr(expr, :call)
+        func = expr.args[1]
+        args = expr.args[2:end]
+        return quote
+            $api_func(; f = $func, args = ($(args...),), $(kwargs...))
+        end
+    elseif Meta.isidentifier(expr)
+        if !have_range
+            kwargs = (kwargs..., :(range = JACC.array_size($expr)))
+        end
+        return quote
+            $api_func(; f = JACC.elem_access, args = ($(expr),), $(kwargs...))
+        end
+    else
+        throw(ArgumentError("last argument should be a kernel function call or an array"))
     end
 end
 
