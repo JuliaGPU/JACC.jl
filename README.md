@@ -44,10 +44,10 @@ JACC.jl programming model provides:
 Julia provides a tight, interoperable ecosystem for GPU programming. Still, vendor support of some features may vary. The following table summarizes the current support status of JACC.jl features across different backends.
 
 
-| Feature \ Backend     | CPU                 | CUDA              | AMDGPU | Metal | oneAPI            |
+| Feature \ Backend     | CPU                 | CUDA (GPUs)              | AMDGPU (GPUs) | Metal | oneAPI            |
 | --------------------- | ------------------- | ----------------- | ------ | ----- | ----------------- |
 | CI                    | ✅                   | ✅                 | ✅      | ✅     | TBD               |
-|                       | x86-64, Arm GH Runners | RTXA4000, GTX1080 | MI100, MI300A  | M1    | A770              |
+|                       | x86-64, Arm GH Runners | RTXA4000 (1), A100 (2)   | MI100 (2) | M1, M3    | A770              |
 | Float64               | ✅                   | ✅                 | ✅      | ❌     | ✅  (if supported) |
 | `Multi` (GPU)         | N/A                 | ✅                 | ✅      | ❌     | ✅                 |
 | `shared`              | N/A                 | ✅                 | ✅      | ✅     | ✅                 |
