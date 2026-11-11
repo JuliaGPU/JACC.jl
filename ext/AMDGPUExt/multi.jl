@@ -573,6 +573,7 @@ end
 function _multi_copy_ghosttoarray(x::ArrayPart, y::ArrayPart, ndev::Integer)
     #x is the array and y is the ghost array
     i = (workgroupIdx().x - 1) * workgroupDim().x + workitemIdx().x
+    i > length(x) && return nothing
     id = JACC.Multi.ghost_shift(AMDGPUBackend, i, y)
     x[i] = y[id]
     return nothing
@@ -581,6 +582,7 @@ end
 function _multi_copy_arraytoghost(x::ArrayPart, y::ArrayPart, ndev::Integer)
     #x is the ghost array and y is the array
     i = (workgroupIdx().x - 1) * workgroupDim().x + workitemIdx().x
+    i > length(y) && return nothing
     id = JACC.Multi.ghost_shift(AMDGPUBackend, i, x)
     x[id] = y[i]
     return nothing

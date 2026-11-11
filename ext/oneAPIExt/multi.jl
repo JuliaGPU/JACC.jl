@@ -527,6 +527,7 @@ end
 function _multi_copy_ghosttoarray(x::ArrayPart, y::ArrayPart, ndev::Integer)
     #x is the array and y is the ghost array
     i = get_global_id()
+    i > length(x) && return nothing
     id = JACC.Multi.ghost_shift(oneAPIBackend, i, y)
     x[i] = y[id]
     return nothing
@@ -535,6 +536,7 @@ end
 function _multi_copy_arraytoghost(x::ArrayPart, y::ArrayPart, ndev::Integer)
     #x is the ghost array and y is the array
     i = get_global_id()
+    i > length(y) && return nothing
     id = JACC.Multi.ghost_shift(oneAPIBackend, i, x)
     x[id] = y[i]
     return nothing
