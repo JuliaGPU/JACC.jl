@@ -1,6 +1,6 @@
-using oneAPIExt: _make_kernel, _make_kname
+using oneAPIExt: _make_kernel, _make_kname, oneAPITag
 
-function JACC.Experimental.parallel_scan(f, ::oneAPIBackend, N::Integer, x...;
+function JACC.Experimental.parallel_scan(f, ::oneAPITag, N::Integer, x...;
         op, init, name = nothing)
     red_inst = oneAPI.oneArray{typeof(init)}(undef, 0)
 

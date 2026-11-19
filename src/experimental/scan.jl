@@ -1,11 +1,11 @@
-import JACC: AllDims, default_backend
+import JACC: AllDims, default_backend_type
 
 @inline _resolve_init_type(op, init::Nothing) = JACC.default_init(op)
 @inline _resolve_init_type(op, init) = init
 
 @inline function parallel_scan(f, dims::AllDims, x...; op = +, init = nothing)
     _init = _resolve_init_type(op, init)
-    return parallel_scan(f, default_backend(), dims, x...; op = op, init = _init)
+    return parallel_scan(f, default_backend_type(), dims, x...; op = op, init = _init)
 end
 
 @inline function parallel_scan(dims::AllDims, f, x...; kw...)

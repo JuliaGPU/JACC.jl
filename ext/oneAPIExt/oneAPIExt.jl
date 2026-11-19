@@ -2,9 +2,9 @@ module oneAPIExt
 
 using JACC, oneAPI, oneAPI.oneL0
 
+const oneAPITag = Type{oneAPIBackend}
 JACC.get_backend(::Val{:oneapi}) = oneAPIBackend()
 JACC.get_backend_type(::Val{:oneapi}) = oneAPIBackend
-const oneAPITag = Type{oneAPIBackend}
 
 include("array.jl")
 include("async.jl")

@@ -2,9 +2,9 @@ module CUDAExt
 
 using JACC, CUDA
 
+const CUDATag = Type{CUDABackend}
 JACC.get_backend(::Val{:cuda}) = CUDABackend()
 JACC.get_backend_type(::Val{:cuda}) = CUDABackend
-const CUDATag = Type{CUDABackend}
 
 # overloaded array functions
 include("array.jl")

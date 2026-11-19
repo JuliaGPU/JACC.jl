@@ -2,9 +2,9 @@ module MetalExt
 
 using JACC, Metal
 
+const MetalTag = Type{MetalBackend}
 JACC.get_backend(::Val{:metal}) = MetalBackend()
 JACC.get_backend_type(::Val{:metal}) = MetalBackend
-const MetalTag = Type{MetalBackend}
 
 include("array.jl")
 
@@ -226,8 +226,8 @@ function JACC.parallel_reduce(f, ::MetalTag, N::Integer, x...; op, init,
         name = nothing)
     ret_inst = Metal.MtlArray{typeof(init)}(undef, 0)
     kargs1 = (Val(512), N, op, ret_inst, init, f, x...)
-    kernel1,
-    threads1 = _kernel_maxthreads(_parallel_reduce_metal, kargs1, _make_kname(name, "block_reduce"))
+    (kernel1, threads1) = _kernel_maxthreads(
+        _parallel_reduce_metal, kargs1, _make_kname(name, "block_reduce"))
 
     rret = Metal.MtlArray([init])
     kargs2 = (Val(512), 1, op, ret_inst, init, rret)
@@ -521,5 +521,7 @@ end
 JACC._array(::MetalTag, x::Metal.MtlArray) = x
 JACC.array(backend::MetalTag, x::Base.Array) = JACC._array(backend, x)
 JACC.array(::MetalTag, x::Metal.MtlArray) = x
+
+include("experimental/experimental.jl")
 
 end # module MetalExt

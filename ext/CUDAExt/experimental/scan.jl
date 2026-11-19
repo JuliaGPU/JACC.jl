@@ -1,6 +1,6 @@
-using CUDAExt: _make_kname, _kernel_args, _kernel_maxthreads
+using CUDAExt: _make_kname, _kernel_args, _kernel_maxthreads, CUDATag
 
-function JACC.Experimental.parallel_scan(f, ::CUDABackend, N::Integer, x...; op, init,
+function JACC.Experimental.parallel_scan(f, ::CUDATag, N::Integer, x...; op, init,
         name = nothing)
     red_inst = CUDA.CuArray{typeof(init)}(undef, 0)
 

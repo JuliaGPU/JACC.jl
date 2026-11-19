@@ -11,7 +11,6 @@ JACC.get_backend_type(::Val{:amdgpu}) = AMDGPUBackend
 include("array.jl")
 include("multi.jl")
 include("async.jl")
-include("experimental/experimental.jl")
 
 default_stream() = AMDGPU.stream()
 
@@ -728,5 +727,7 @@ end
 JACC._array(::AMDGPUTag, x::AMDGPU.ROCArray) = x
 JACC.array(::AMDGPUTag, x::AbstractArray) = JACC._array(AMDGPUBackend, x)
 JACC.array(::AMDGPUTag, x::AMDGPU.ROCArray) = x
+
+include("experimental/experimental.jl")
 
 end # module AMDGPUExt

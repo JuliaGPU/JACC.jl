@@ -376,7 +376,7 @@ end
     @test JACC.to_host(res)[] == 1
 end
 
-if JACC.backend in ["oneapi", "cuda"]
+if JACC.backend in ["oneapi", "cuda", "amdgpu", "metal"]
     @testset "scan" begin
         # basic accumulate
         N = 20
@@ -396,14 +396,16 @@ if JACC.backend in ["oneapi", "cuda"]
         @test JACC.to_host(row_ends) == accumulate(+, row_counts)
 
         # reverse accumulate
-        row_ends = JACC.to_device(row_counts)
-        JACC.Experimental.parallel_scan(N:-1:1, row_ends) do i, partial, final, ends
-            partial[] += ends[i]
-            if final
-                ends[i] = partial[]
+        if JACC.backend != "metal" # can't do StepRange
+            row_ends = JACC.to_device(row_counts)
+            JACC.Experimental.parallel_scan(N:-1:1, row_ends) do i, partial, final, ends
+                partial[] += ends[i]
+                if final
+                    ends[i] = partial[]
+                end
             end
+            @test JACC.to_host(row_ends) == accumulate(+, row_counts[N:-1:1])[N:-1:1]
         end
-        @test JACC.to_host(row_ends) == accumulate(+, row_counts[N:-1:1])[N:-1:1]
 
         # kokkos example
         N = 300 # testing with more than one block
