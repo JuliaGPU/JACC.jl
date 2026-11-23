@@ -495,10 +495,17 @@ end
         @inbounds shared_mem[ti] = tmp
     end
 
-    max_pwr = JACC.ilog2(shmem_length) - 1
-    for p in (max_pwr:-1:0)
+    # Tree reduction over the block. `tn` starts at the largest power of two
+    # not above the block size; the entries past it are folded into the front
+    # first, so a block size that is not a power of two loses nothing.
+    tn = one(shmem_length) << JACC.ilog2(shmem_length)
+    AMDGPU.sync_workgroup()
+    if ti <= shmem_length - tn
+        @inbounds shared_mem[ti] = op(shared_mem[ti], shared_mem[ti + tn])
+    end
+    while tn > 1
+        tn >>= 1
         AMDGPU.sync_workgroup()
-        tn = 2^p
         if ti <= tn
             @inbounds shared_mem[ti] = op(shared_mem[ti], shared_mem[ti + tn])
         end
@@ -521,10 +528,17 @@ function _reduce_kernel_amdgpu(N, op, red, init, ret)
     end
     @inbounds shared_mem[i] = tmp
 
-    max_pwr = JACC.ilog2(shmem_length) - 1
-    for p in (max_pwr:-1:0)
+    # Tree reduction over the block. `tn` starts at the largest power of two
+    # not above the block size; the entries past it are folded into the front
+    # first, so a block size that is not a power of two loses nothing.
+    tn = one(shmem_length) << JACC.ilog2(shmem_length)
+    AMDGPU.sync_workgroup()
+    if i <= shmem_length - tn
+        @inbounds shared_mem[i] = op(shared_mem[i], shared_mem[i + tn])
+    end
+    while tn > 1
+        tn >>= 1
         AMDGPU.sync_workgroup()
-        tn = 2^p
         if i <= tn
             @inbounds shared_mem[i] = op(shared_mem[i], shared_mem[i + tn])
         end

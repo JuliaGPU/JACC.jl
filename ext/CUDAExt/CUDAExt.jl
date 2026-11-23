@@ -499,11 +499,18 @@ function _parallel_reduce_cuda(N, op, ret, init, f, x...)
         @inbounds shared_mem[ti] = tmp
     end
 
-    max_pwr = JACC.ilog2(shmem_length) - 1
-    for p in (max_pwr:-1:0)
+    # Tree reduction over the block. `tn` starts at the largest power of two
+    # not above the block size; the entries past it are folded into the front
+    # first, so a block size that is not a power of two loses nothing.
+    tn = one(shmem_length) << JACC.ilog2(shmem_length)
+    sync_threads()
+    if ti <= shmem_length - tn
+        @inbounds shared_mem[ti] = op(shared_mem[ti], shared_mem[ti + tn])
+    end
+    while tn > 1
+        tn >>= 1
         sync_threads()
-        tn = 2^p
-        if (ti <= tn)
+        if ti <= tn
             @inbounds shared_mem[ti] = op(shared_mem[ti], shared_mem[ti + tn])
         end
     end
@@ -525,10 +532,17 @@ function _reduce_kernel_cuda(N, op, red, init, ret)
     end
     @inbounds shared_mem[i] = tmp
 
-    max_pwr = JACC.ilog2(shmem_length) - 1
-    for p in (max_pwr:-1:0)
+    # Tree reduction over the block. `tn` starts at the largest power of two
+    # not above the block size; the entries past it are folded into the front
+    # first, so a block size that is not a power of two loses nothing.
+    tn = one(shmem_length) << JACC.ilog2(shmem_length)
+    sync_threads()
+    if i <= shmem_length - tn
+        @inbounds shared_mem[i] = op(shared_mem[i], shared_mem[i + tn])
+    end
+    while tn > 1
+        tn >>= 1
         sync_threads()
-        tn = 2^p
         if i <= tn
             @inbounds shared_mem[i] = op(shared_mem[i], shared_mem[i + tn])
         end

@@ -55,6 +55,29 @@ end
     @test typeof(x) == CuArray{Complex{Float32}, 3, DeviceMemory}
 end
 
+@testset "reduce_block_sizes" begin
+    # The block and grid reduction kernels launched directly, at block sizes
+    # that are and are not powers of two. parallel_reduce takes its block size
+    # from the kernel's launch configuration, which need not be a power of
+    # two, and the tree inside a block has to count every entry either way.
+    ext = Base.get_extension(JACC, :CUDAExt)
+    block_reduce = ext._parallel_reduce_cuda
+    grid_reduce = ext._reduce_kernel_cuda
+    one_per_item(i) = 1
+    for threads in (1, 2, 3, 96, 100, 256, 384, 500, 512)
+        N = 3 * threads + 1
+        blocks = cld(N, threads)
+        shmem = threads * sizeof(Int)
+        tmp = CUDA.zeros(Int, blocks)
+        ret = CUDA.zeros(Int, 1)
+        CUDA.@cuda threads=threads blocks=blocks shmem=shmem block_reduce(
+            N, +, tmp, 0, one_per_item)
+        CUDA.@cuda threads=threads blocks=1 shmem=shmem grid_reduce(
+            blocks, +, tmp, 0, ret)
+        @test Base.Array(ret)[1] == N
+    end
+end
+
 @testset "stream" begin
     using CUDA
     sd1 = JACC.default_stream()
