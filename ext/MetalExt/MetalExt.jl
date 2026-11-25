@@ -189,23 +189,37 @@ JACC.get_result(wk::MetalReduceWorkspace) = Base.Array(wk.ret)[]
 _make_kname(base::AbstractString, sfx::AbstractString) = base * "__" * sfx
 _make_kname(::Nothing, ::AbstractString) = nothing
 
+# the kernels' tree needs threads == shmem_length, a power of two
+function _reduce_kernels(N, op, tmp, init, ret, f, x...; name)
+    threads = 512
+    while true
+        kargs1 = (Val(threads), N, op, tmp, init, f, x...)
+        kernel1,
+        threads1 = _kernel_maxthreads(_parallel_reduce_metal, kargs1,
+            _make_kname(name, "block_reduce"))
+
+        kargs2 = (Val(threads), 1, op, tmp, init, ret)
+        kernel2,
+        threads2 = _kernel_maxthreads(_reduce_kernel_metal, kargs2,
+            _make_kname(name, "grid_reduce"))
+
+        fit = prevpow(2, min(threads1, threads2, threads))
+        if fit == threads
+            return kernel1, kernel2, threads
+        end
+        threads = fit
+    end
+end
+
 function JACC._parallel_reduce!(reducer::JACC.ParallelReduce{MetalBackend},
         N::Integer, f, x...; name = nothing)
     wk = reducer.workspace
     op = reducer.op
     init = reducer.init
 
-    kargs1 = (Val(512), N, op, wk.tmp, init, f, x...)
     kernel1,
-    threads1 = _kernel_maxthreads(_parallel_reduce_metal, kargs1,
-        _make_kname(name, "block_reduce"))
-
-    kargs2 = (Val(512), 1, op, wk.tmp, init, wk.ret)
     kernel2,
-    threads2 = _kernel_maxthreads(_reduce_kernel_metal, kargs2,
-        _make_kname(name, "grid_reduce"))
-
-    threads = min(threads1, threads2, 512)
+    threads = _reduce_kernels(N, op, wk.tmp, init, wk.ret, f, x...; name)
     groups = cld(N, threads)
 
     _init!(wk, groups, init)
@@ -225,16 +239,10 @@ end
 function JACC.parallel_reduce(f, ::MetalTag, N::Integer, x...; op, init,
         name = nothing)
     ret_inst = Metal.MtlArray{typeof(init)}(undef, 0)
-    kargs1 = (Val(512), N, op, ret_inst, init, f, x...)
-    kernel1,
-    threads1 = _kernel_maxthreads(_parallel_reduce_metal, kargs1, _make_kname(name, "block_reduce"))
-
     rret = Metal.MtlArray([init])
-    kargs2 = (Val(512), 1, op, ret_inst, init, rret)
+    kernel1,
     kernel2,
-    threads2 = _kernel_maxthreads(_reduce_kernel_metal, kargs2, _make_kname(name, "grid_reduce"))
-
-    threads = min(threads1, threads2, 512)
+    threads = _reduce_kernels(N, op, ret_inst, init, rret, f, x...; name)
     groups = cld(N, threads)
 
     ret = Metal.MtlArray{typeof(init)}(undef, groups)
