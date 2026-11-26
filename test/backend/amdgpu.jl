@@ -112,6 +112,24 @@ end
     @test s2 != s1
 end
 
+@testset "launch bound" begin
+    # The default bound, 1024 threads, holds a wave64 kernel to 128 VGPRs; a
+    # bound of 256 or fewer lifts it. The block chosen stays within the bound.
+    a = JACC.zeros(Float64, 1000)
+    spec = JACC.launch_spec(; maxthreads = 64)
+    JACC.parallel_for(spec, 1000, a) do i, a
+        @inbounds a[i] = i
+    end
+    @test Array(a) == 1.0:1000.0
+    @test spec.threads <= 64
+    spec = JACC.launch_spec(; maxthreads = 64)
+    JACC.parallel_for(spec, (100, 100), (i, j, a) -> nothing, a)
+    @test prod(spec.threads) <= 64
+    spec = JACC.launch_spec(; maxthreads = 64, threads = 128)
+    @test_throws ArgumentError JACC.parallel_for(
+        spec, 1000, (i, a) -> nothing, a)
+end
+
 include("preferences.jl")
 
 @testset "preferences" begin

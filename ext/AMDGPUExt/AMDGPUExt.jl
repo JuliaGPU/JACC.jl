@@ -43,9 +43,40 @@ end
     return AMDGPU.hipfunction(kernel_function, p_tt; name = kname)
 end
 
+@inline function _make_kernel(kernel_function, kargs, kname, maxthreads::Int)
+    maxthreads > 0 || return _make_kernel(kernel_function, kargs, kname)
+    p_tt = Tuple{Core.Typeof.(kargs)...}
+    return kname === nothing ?
+           AMDGPU.hipfunction(kernel_function, p_tt; maxthreads) :
+           AMDGPU.hipfunction(kernel_function, p_tt; name = kname, maxthreads)
+end
+
 @inline function _kernel_maxshmem(kernel_function, kargs, kname)
     p_kernel = _make_kernel(kernel_function, kargs, kname)
     return (p_kernel, _max_shmem_size(p_kernel))
+end
+
+# The kernel compiled under the launch bound of `spec`, when it sets one.
+@inline function _kernel_maxshmem(kernel_function, kargs, kname,
+        spec::LaunchSpec{AMDGPUBackend})
+    p_kernel = _make_kernel(kernel_function, kargs, kname, spec.maxthreads)
+    return (p_kernel, _max_shmem_size(p_kernel))
+end
+
+# The block size the occupancy query suggests, kept within the launch bound:
+# the query does not see the bound, and a block above it fails to launch.
+@inline function _bounded_groupsize(kernel, spec::LaunchSpec{AMDGPUBackend})
+    groupsize = AMDGPU.launch_configuration(
+        kernel; shmem = spec.shmem_size).groupsize
+    return spec.maxthreads > 0 ? min(groupsize, spec.maxthreads) : groupsize
+end
+
+@inline function _check_bound(spec::LaunchSpec{AMDGPUBackend})
+    if spec.maxthreads > 0 && prod(spec.threads) > spec.maxthreads
+        throw(ArgumentError("LaunchSpec: threads = $(spec.threads) exceed " *
+                            "maxthreads = $(spec.maxthreads)"))
+    end
+    return nothing
 end
 
 @inline function _kernel_maxthreads(kernel_function, kargs, kname)
@@ -66,14 +97,15 @@ end
 function JACC.parallel_for(
         f, spec::LaunchSpec{AMDGPUBackend}, N::Integer, x...; name = nothing)
     kargs = _kernel_args(N, f, x...)
-    kernel, shmem_size = _kernel_maxshmem(_parallel_for_amdgpu, kargs, name)
+    kernel, shmem_size = _kernel_maxshmem(
+        _parallel_for_amdgpu, kargs, name, spec)
     if spec.shmem_size < 0
         spec.shmem_size = shmem_size
     end
     if spec.threads == 0
-        config = AMDGPU.launch_configuration(kernel; shmem = spec.shmem_size)
-        spec.threads = min(N, config.groupsize)
+        spec.threads = min(N, _bounded_groupsize(kernel, spec))
     end
+    _check_bound(spec)
     if spec.blocks == 0
         spec.blocks = cld(N, spec.threads)
     end
@@ -168,19 +200,21 @@ end
 function _parallel_for(indexer::TI, f, spec::LaunchSpec{AMDGPUBackend}, (m, n),
         (M, N), x...; name = nothing) where {TI}
     kargs = _kernel_args(indexer, (M, N), f, x...)
-    kernel, shmem_size = _kernel_maxshmem(_parallel_for_amdgpu_MN, kargs, name)
+    kernel, shmem_size = _kernel_maxshmem(
+        _parallel_for_amdgpu_MN, kargs, name, spec)
 
     if spec.shmem_size < 0
         spec.shmem_size = shmem_size
     end
 
     if spec.threads == 0
-        config = AMDGPU.launch_configuration(kernel; shmem = spec.shmem_size)
-        maxThreadsX = sqrt(config.groupsize)
-        y_thr = clamp(floor(Int, (n / m) * maxThreadsX), 1, config.groupsize)
-        x_thr = fld(config.groupsize, y_thr)
+        groupsize = _bounded_groupsize(kernel, spec)
+        maxThreadsX = sqrt(groupsize)
+        y_thr = clamp(floor(Int, (n / m) * maxThreadsX), 1, groupsize)
+        x_thr = fld(groupsize, y_thr)
         spec.threads = (x_thr, y_thr)
     end
+    _check_bound(spec)
 
     if spec.blocks == 0
         spec.blocks = (cld(m, spec.threads[1]), cld(n, spec.threads[2]))
@@ -204,12 +238,12 @@ function JACC.parallel_for(f, spec::LaunchSpec{AMDGPUBackend},
     if spec.threads == 0
         kargs = _kernel_args(BlockIndexerBasic(), (M, N), f, x...)
         (kernel,
-            shmem_size) = _kernel_maxshmem(_parallel_for_amdgpu_MN, kargs, name)
+        shmem_size) = _kernel_maxshmem(
+            _parallel_for_amdgpu_MN, kargs, name, spec)
         if spec.shmem_size < 0
             spec.shmem_size = shmem_size
         end
-        config = AMDGPU.launch_configuration(kernel; shmem = spec.shmem_size)
-        x_thr, y_thr = _block_shape_2d(config.groupsize, M, N)
+        x_thr, y_thr = _block_shape_2d(_bounded_groupsize(kernel, spec), M, N)
         if cld(N, y_thr) > maxBlocks.y && maxBlocks.x >= maxBlocks.y
             _parallel_for(BlockIndexerSwapped(), f, spec, (N, M), (M, N), x...)
         else
@@ -254,17 +288,20 @@ end
 function JACC.parallel_for(f, spec::LaunchSpec{AMDGPUBackend},
         (L, M, N)::NTuple{3, Integer}, x...; name = nothing)
     kargs = _kernel_args((L, M, N), f, x...)
-    kernel, shmem_size = _kernel_maxshmem(_parallel_for_amdgpu_LMN, kargs, name)
+    kernel, shmem_size = _kernel_maxshmem(
+        _parallel_for_amdgpu_LMN, kargs, name, spec)
     if spec.shmem_size < 0
         spec.shmem_size = shmem_size
     end
     if spec.threads == 0
-        numThreads = 32
+        numThreads = spec.maxthreads > 0 ?
+                     max(1, isqrt(min(spec.maxthreads, 1024))) : 32
         Lthreads = min(L, numThreads)
         Mthreads = min(M, numThreads)
         Nthreads = 1
         spec.threads = (Lthreads, Mthreads, Nthreads)
     end
+    _check_bound(spec)
     if spec.blocks == 0
         Lblocks = cld(L, spec.threads[1])
         Mblocks = cld(M, spec.threads[2])
