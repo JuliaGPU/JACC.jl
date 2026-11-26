@@ -341,6 +341,26 @@ end
     C_expected = Float32(2.0) .* ones(Float32, N, N, N)
     @test JACC.to_host(C)≈C_expected rtol=1e-5
 
+    # A launch bound: the result is the same, whatever the backend does with it
+    a = JACC.zeros(Float32, 1000)
+    JACC.parallel_for(JACC.launch_spec(; maxthreads = 64), 1000, a) do i, a
+        @inbounds a[i] = i
+    end
+    @test JACC.to_host(a) == Float32.(1:1000)
+    C = JACC.zeros(Float32, N, N)
+    JACC.parallel_for(JACC.launch_spec(; maxthreads = 64), (N, N),
+        (i, j, C) -> begin
+            @inbounds C[i, j] = i + j
+        end, C)
+    @test JACC.to_host(C) == Float32[i + j for i in 1:N, j in 1:N]
+    C = JACC.zeros(Float32, 20, 20, 20)
+    JACC.parallel_for(JACC.launch_spec(; maxthreads = 64), (20, 20, 20),
+        (i, j, k, C) -> begin
+            @inbounds C[i, j, k] = i + j + k
+        end, C)
+    @test JACC.to_host(C) ==
+          Float32[i + j + k for i in 1:20, j in 1:20, k in 1:20]
+
     # reduce
     a = JACC.ones(N)
     res = JACC.parallel_reduce(JACC.launch_spec(), a)

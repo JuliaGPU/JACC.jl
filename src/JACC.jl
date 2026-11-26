@@ -41,12 +41,28 @@ default_stream() = default_stream(default_backend_type())
 
 create_stream() = create_stream(default_backend_type())
 
+"""
+    LaunchSpec{Backend}(; stream, threads = 0, blocks = 0, shmem_size = -1,
+                        sync = true, maxthreads = 0)
+
+How a `parallel_for` is launched. `threads`, `blocks` and `shmem_size` are
+chosen by the backend when left at their defaults; `sync = false` returns
+without waiting for the kernel.
+
+`maxthreads` is an upper bound on the threads of one block, given to the
+compiler (the `__launch_bounds__` of CUDA C and HIP). `0` leaves the
+backend's default. On AMDGPU, whose default is 1024 threads, a smaller bound
+lets a kernel use more registers per thread instead of spilling to scratch:
+1024 threads cap a wave64 kernel at 128 VGPRs, 256 or fewer allow 512. The
+chosen block never exceeds it. Backends with no such default ignore it.
+"""
 @kwdef mutable struct LaunchSpec{Backend}
     stream = default_stream(Backend)
     threads = 0
     blocks = 0
     shmem_size::Int = -1
     sync::Bool = true
+    maxthreads::Int = 0
 end
 
 launch_spec(; kw...) = LaunchSpec{default_backend_type()}(; kw...)
